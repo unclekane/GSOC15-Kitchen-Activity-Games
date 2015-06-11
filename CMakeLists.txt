@@ -1,12 +1,13 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
-project(Kitchen_Activity_Games)
+project(KitchenActivityGames)
 
 # Find packages
 find_package (Qt4)
 
 find_package(Boost REQUIRED COMPONENTS system)
 include_directories(${Boost_INCLUDE_DIRS})
+include_directories(include)
 link_directories(${Boost_LIBRARY_DIRS})
 
 
@@ -29,13 +30,12 @@ include_directories(SYSTEM ${GAZEBO_INCLUDE_DIRS} ${OGRE_INCLUDE_DIRS} ${OGRE-Te
 link_directories(${GAZEBO_LIBRARY_DIRS})
 
 # Create libraries and executables
-
-QT4_WRAP_CPP(headers_MOC main_window.hh)
-
-
-add_executable(server_main server_main.cc)
-target_link_libraries(server_main ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES} ${PROTOBUF_LIBRARIES} ${QT_LIBRARIES} QtTest pthread)
+QT4_WRAP_CPP(headers_MOC include/MainWindow.hh)
 
 
-add_executable(client_main client_main.cc main_window.cc ${headers_MOC} )
-target_link_libraries(client_main ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES} ${OGRE_LIBRARIES} ${OGRE-Terrain_LIBRARIES} ${PROTOBUF_LIBRARIES} ${QT_LIBRARIES} QtTest pthread)
+add_executable(ServerMain src/ServerMain src/ServerMain.cc)
+target_link_libraries(ServerMain ${GAZEBO_LIBRARIES} gazebo_util ${Boost_LIBRARIES} ${PROTOBUF_LIBRARIES} ${QT_LIBRARIES} QtTest pthread)
+
+
+add_executable(ClientMain src/ClientMain.cc src/MainWindow.cc ${headers_MOC} )
+target_link_libraries(ClientMain ${GAZEBO_LIBRARIES} gazebo_util ${Boost_LIBRARIES} ${OGRE_LIBRARIES} ${OGRE-Terrain_LIBRARIES} ${PROTOBUF_LIBRARIES} ${QT_LIBRARIES} QtTest pthread)
