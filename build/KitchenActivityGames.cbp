@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+   <FileVersion major="1" minor="6" />
+   <Project>
+      <Option title="KitchenActivityGames" />
+      <Option makefile_is_custom="1" />
+      <Option compiler="gcc" />
+      <Option virtualFolders="CMake Files\;" />
+      <Build>
+      <Target title="all">
+         <Option working_dir="/home/kane/gazebo/build" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 all" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="ClientMain">
+         <Option output="/home/kane/gazebo/build/ClientMain" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/kane/gazebo/build" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add option="-DQT_NO_DEBUG" />
+            <Add option="-DQT_GUI_LIB" />
+            <Add option="-DQT_CORE_LIB" />
+            <Add directory="/home/kane/gazebo/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/OGRE" />
+            <Add directory="/usr/include/OGRE/Paging" />
+            <Add directory="/usr/include/OGRE/Terrain" />
+            <Add directory="/usr/include/c++/4.9" />
+            <Add directory="/usr/include/c++/4.9/backward" />
+            <Add directory="/usr/include/gazebo-5.0" />
+            <Add directory="/usr/include/qt4" />
+            <Add directory="/usr/include/qt4/QtCore" />
+            <Add directory="/usr/include/qt4/QtGui" />
+            <Add directory="/usr/include/sdformat-2.3" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/4.9" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/4.9/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/4.9/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 ClientMain" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="ClientMain/fast">
+         <Option output="/home/kane/gazebo/build/ClientMain" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/kane/gazebo/build" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add option="-DQT_NO_DEBUG" />
+            <Add option="-DQT_GUI_LIB" />
+            <Add option="-DQT_CORE_LIB" />
+            <Add directory="/home/kane/gazebo/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/OGRE" />
+            <Add directory="/usr/include/OGRE/Paging" />
+            <Add directory="/usr/include/OGRE/Terrain" />
+            <Add directory="/usr/include/c++/4.9" />
+            <Add directory="/usr/include/c++/4.9/backward" />
+            <Add directory="/usr/include/gazebo-5.0" />
+            <Add directory="/usr/include/qt4" />
+            <Add directory="/usr/include/qt4/QtCore" />
+            <Add directory="/usr/include/qt4/QtGui" />
+            <Add directory="/usr/include/sdformat-2.3" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/4.9" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/4.9/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/4.9/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 ClientMain/fast" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="ServerMain">
+         <Option output="/home/kane/gazebo/build/ServerMain" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/kane/gazebo/build" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add option="-DQT_NO_DEBUG" />
+            <Add option="-DQT_GUI_LIB" />
+            <Add option="-DQT_CORE_LIB" />
+            <Add directory="/home/kane/gazebo/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/OGRE" />
+            <Add directory="/usr/include/OGRE/Paging" />
+            <Add directory="/usr/include/OGRE/Terrain" />
+            <Add directory="/usr/include/c++/4.9" />
+            <Add directory="/usr/include/c++/4.9/backward" />
+            <Add directory="/usr/include/gazebo-5.0" />
+            <Add directory="/usr/include/qt4" />
+            <Add directory="/usr/include/qt4/QtCore" />
+            <Add directory="/usr/include/qt4/QtGui" />
+            <Add directory="/usr/include/sdformat-2.3" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/4.9" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/4.9/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/4.9/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 ServerMain" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="ServerMain/fast">
+         <Option output="/home/kane/gazebo/build/ServerMain" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/kane/gazebo/build" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add option="-DQT_NO_DEBUG" />
+            <Add option="-DQT_GUI_LIB" />
+            <Add option="-DQT_CORE_LIB" />
+            <Add directory="/home/kane/gazebo/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/OGRE" />
+            <Add directory="/usr/include/OGRE/Paging" />
+            <Add directory="/usr/include/OGRE/Terrain" />
+            <Add directory="/usr/include/c++/4.9" />
+            <Add directory="/usr/include/c++/4.9/backward" />
+            <Add directory="/usr/include/gazebo-5.0" />
+            <Add directory="/usr/include/qt4" />
+            <Add directory="/usr/include/qt4/QtCore" />
+            <Add directory="/usr/include/qt4/QtGui" />
+            <Add directory="/usr/include/sdformat-2.3" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/4.9" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/4.9/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/4.9/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 ServerMain/fast" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="edit_cache">
+         <Option working_dir="/home/kane/gazebo/build" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 edit_cache" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="rebuild_cache">
+         <Option working_dir="/home/kane/gazebo/build" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 rebuild_cache" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/kane/gazebo/build/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      </Build>
+      <Unit filename="/home/kane/gazebo/src/ClientMain.cc">
+      </Unit>
+      <Unit filename="/home/kane/gazebo/src/MainWindow.cc">
+      </Unit>
+      <Unit filename="/home/kane/gazebo/src/ServerMain.cc">
+      </Unit>
+      <Unit filename="/home/kane/gazebo/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\" />
+      </Unit>
+   </Project>
+</CodeBlocks_project_file>

@@ -1,0 +1,2 @@
+/home/kane/gazebo/build/CMakeFiles/ClientMain.dir
+/home/kane/gazebo/build/CMakeFiles/ServerMain.dir
