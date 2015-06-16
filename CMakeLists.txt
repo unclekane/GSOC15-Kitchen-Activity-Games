@@ -33,8 +33,8 @@ link_directories(${GAZEBO_LIBRARY_DIRS})
 QT4_WRAP_CPP(headers_MOC include/MainWindow.hh)
 
 
-add_executable(ServerMain src/ServerMain src/ServerMain.cc)
-target_link_libraries(ServerMain ${GAZEBO_LIBRARIES} gazebo_util ${Boost_LIBRARIES} ${PROTOBUF_LIBRARIES} ${QT_LIBRARIES} QtTest pthread)
+add_executable(gzserver src/ServerMain src/ServerMain.cc)
+target_link_libraries(gzserver ${GAZEBO_LIBRARIES} gazebo_util ${Boost_LIBRARIES} ${PROTOBUF_LIBRARIES} ${QT_LIBRARIES} QtTest pthread)
 
 
 add_executable(MinimalClient src/MinimalClientMain.cc src/MainWindow.cc ${headers_MOC} )

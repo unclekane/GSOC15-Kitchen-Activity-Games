@@ -177,7 +177,7 @@ int main(int _argc, char **_argv)
 
 
   // USER CODE
-  gazebo::GUIWindow *window = new gazebo::GUIWindow();
+  gazebo::GUIWindow *window = new gazebo::GUIWindow(_argc,_argv);
   window->show();
 
   // END USER CODE
