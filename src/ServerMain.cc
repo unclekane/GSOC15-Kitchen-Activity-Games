@@ -50,6 +50,65 @@ void playEmptyFile()
 
 
 /////////////////////////////////////////////////
+bool OpenWorld(const std::string & _filename)
+{
+  gzerr << "Open World is not implemented\n";
+  return false;
+/*
+  sdf::SDFPtr sdf(new sdf::SDF);
+  if (!sdf::init(sdf))
+  {
+    gzerr << "Unable to initialize sdf\n";
+    return false;
+  }
+
+  if (!sdf::readFile(_filename, sdf))
+  {
+    gzerr << "Unable to read sdf file[" << _filename << "]\n";
+    return false;
+  }
+
+  msgs::WorldModify worldMsg;
+  worldMsg.set_world_name("default");
+  worldMsg.set_remove(true);
+  this->worldModPub->Publish(worldMsg);
+
+  physics::stop_worlds();
+
+  physics::remove_worlds();
+
+  sensors::remove_sensors();
+
+  gazebo::transport::clear_buffers();
+
+  sdf::ElementPtr worldElem = sdf->root->GetElement("world");
+
+  physics::WorldPtr world = physics::create_world();
+
+  physics::load_world(world, worldElem);
+
+  physics::init_world(world);
+
+  physics::run_world(world);
+
+  worldMsg.set_world_name("default");
+  worldMsg.set_remove(false);
+  worldMsg.set_create(true);
+  this->worldModPub->Publish(worldMsg);
+  return true;
+  */
+}
+
+void OnServerMessage(ConstServerControlPtr &_msg)
+{
+    if(_msg->has_open_filename())
+    {
+        OpenWorld(_msg->open_filename());
+    }
+}
+
+
+/////////////////////////////////////////////////
 int main(int _argc, char **_argv)
 {
     gzLogInit("server-", "server.log");
@@ -60,7 +119,13 @@ int main(int _argc, char **_argv)
     {
       gzLogInit("server-", "server.log");
 
-      //gazebo::util::LogRecord::Instance()->Init("server");
+      gazebo::transport::NodePtr node = gazebo::transport::NodePtr(new gazebo::transport::Node());
+      node->Init("/gazebo");
+      gazebo::transport::SubscriberPtr serverSub = node->Subscribe("/gazebo/server/control", &OnServerMessage);
+
+
+      gazebo::util::LogRecord::Instance()->SetBasePath("logs");
+      gazebo::util::LogRecord::Instance()->Init("server");
 
       server = new gazebo::Server();
 

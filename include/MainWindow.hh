@@ -5,6 +5,7 @@
 #include <QWidget>
 
 class QPushButton;
+class QProcess;
 
 namespace gazebo
 {
@@ -12,14 +13,21 @@ namespace gazebo
     {
       Q_OBJECT
 
-      public: GUIWindow();
+      public: GUIWindow(int _argc, char **_argv);
       public: virtual ~GUIWindow();
+
+      private: int argc;
+      private: char **argv;
+      private: QProcess *server_process;
 
       private: bool isSimulationPaused;
       private: bool isLoggingPaused;
       private: QPushButton *pauseButton;
       private: QPushButton *loggingButton;
+      private: QPushButton *startServerButton;
+      private: QPushButton *openWorldButton;
 
+      protected slots: void OnStartServerButtonClick();
       protected slots: void OnPauseButtonClick();
       protected slots: void OnOpenWorldClick();
       protected slots: void OnLogButtonClick();
@@ -27,6 +35,7 @@ namespace gazebo
       private: transport::NodePtr node;
       private: transport::PublisherPtr worldCntPub;
       private: transport::PublisherPtr serverCntPub;
+      private: transport::PublisherPtr logCntPub;
     };
 }
 #endif

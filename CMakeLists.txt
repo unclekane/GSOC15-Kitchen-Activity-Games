@@ -37,5 +37,5 @@ add_executable(ServerMain src/ServerMain src/ServerMain.cc)
 target_link_libraries(ServerMain ${GAZEBO_LIBRARIES} gazebo_util ${Boost_LIBRARIES} ${PROTOBUF_LIBRARIES} ${QT_LIBRARIES} QtTest pthread)
 
 
-add_executable(ClientMain src/ClientMain.cc src/MainWindow.cc ${headers_MOC} )
-target_link_libraries(ClientMain ${GAZEBO_LIBRARIES} gazebo_util ${Boost_LIBRARIES} ${OGRE_LIBRARIES} ${OGRE-Terrain_LIBRARIES} ${PROTOBUF_LIBRARIES} ${QT_LIBRARIES} QtTest pthread)
+add_executable(MinimalClient src/MinimalClientMain.cc src/MainWindow.cc ${headers_MOC} )
+target_link_libraries(MinimalClient ${GAZEBO_LIBRARIES} gazebo_util ${Boost_LIBRARIES} ${OGRE_LIBRARIES} ${OGRE-Terrain_LIBRARIES} ${PROTOBUF_LIBRARIES} ${QT_LIBRARIES} QtTest pthread)
