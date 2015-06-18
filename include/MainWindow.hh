@@ -33,14 +33,16 @@ namespace gazebo
       private: char      **argv;
       private: QStringList args;
       private: QProcess *server_process;
+      private: std::list<QProcess*> child_processes;
 
       private: bool isSimulationPaused;
       private: bool isLoggingPaused;
 
       private: QPushButton *pauseButton;
       private: QPushButton *loggingButton;
-      private: QPushButton *startServerButton;
+      private: QPushButton *openLogButton;
       private: QPushButton *openWorldButton;
+      private: QPushButton *openClientButton;
 
       private: transport::NodePtr      node;
       private: transport::PublisherPtr worldCntPub;
@@ -55,10 +57,11 @@ namespace gazebo
       private: void startServer();
       private: void stopServer();
 
-      protected slots: void OnStartServerButtonClick();
       protected slots: void OnPauseButtonClick();
       protected slots: void OnOpenWorldClick();
+      protected slots: void OnOpenLogButtonClick();
       protected slots: void OnLogButtonClick();
+      protected slots: void OnOpenClientClick();
     };
 }
 #endif

@@ -39,13 +39,13 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
     QVBoxLayout *frameLayout = new QVBoxLayout();
 
 
-    startServerButton = new QPushButton("Start Server");
-    connect(startServerButton, SIGNAL(clicked()), this, SLOT(OnStartServerButtonClick()));
-    frameLayout->addWidget(startServerButton);
-
-    openWorldButton = new QPushButton("Open World and Start", this);
+    openWorldButton = new QPushButton("Start World", this);
     connect(openWorldButton, SIGNAL(clicked()), this, SLOT(OnOpenWorldClick()));
     frameLayout->addWidget(openWorldButton);
+
+    openLogButton = new QPushButton("Start Log", this);
+    connect(openLogButton, SIGNAL(clicked()), this, SLOT(OnOpenLogButtonClick()));
+    frameLayout->addWidget(openLogButton);
 
 
     // Create a push button, and connect it to the OnButton function
@@ -58,6 +58,11 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
     loggingButton->setDisabled(true);
     connect(loggingButton, SIGNAL(clicked()), this, SLOT(OnLogButtonClick()));
     frameLayout->addWidget(loggingButton);
+
+    openClientButton = new QPushButton("Start Client");
+    openClientButton->setDisabled(true);
+    connect(openClientButton, SIGNAL(clicked()), this, SLOT(OnOpenClientClick()));
+    frameLayout->addWidget(openClientButton);
 
 
     mainFrame->setLayout(frameLayout);
@@ -77,25 +82,19 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
     }
 }
 
+
 /////////////////////////////////////////////////
 GUIWindow::~GUIWindow()
 {
     if(server_process != NULL)
         stopServer();
-}
 
-
-/////////////////////////////////////////////////
-void GUIWindow::OnStartServerButtonClick()
-{
-    if(server_process == NULL)
+    for( std::list<QProcess*>::iterator processItr = child_processes.begin(); processItr != child_processes.end(); ++processItr)
     {
-        startServer();
-        startServerButton->setText("Stop Server");
-    }
-    else
-    {
-        stopServer();
+        (*processItr)->terminate();
+        (*processItr)->kill();
+        (*processItr)->waitForFinished(-1);
+        delete (*processItr);
     }
 }
 
@@ -143,18 +142,51 @@ void GUIWindow::OnLogButtonClick()
     this->logCntPub->Publish(logCntrl);
 }
 
+
+
+/////////////////////////////////////////////////
+void GUIWindow::OnOpenLogButtonClick()
+{
+    if(server_process == NULL)
+    {
+        QString file = QFileDialog::getOpenFileName(this, tr("Open Log"), "/home");
+
+        if(file.isEmpty())
+            return;
+
+        args.push_back("-p");
+        args.push_back(file);
+        startServer();
+    }
+    else
+    {
+        stopServer();
+    }
+}
+
 /////////////////////////////////////////////////
 void GUIWindow::OnOpenWorldClick()
 {
-    QString file = QFileDialog::getOpenFileName(this, tr("Open World"), "/home");
-    /* NOT IMPLEMENTED IN GAZEBO YET!!!
-    gazebo::msgs::ServerControl serverCntrl;
-    serverCntrl.set_open_filename(file.toStdString());
-    this->serverCntPub->Publish(serverCntrl);
-    */
+    if(server_process == NULL)
+    {
+        QString file = QFileDialog::getOpenFileName(this, tr("Open World"), "/home");
 
-    args.push_back(file);
-    startServer();
+        if(file.isEmpty())
+            return;
+
+        /* NOT IMPLEMENTED IN GAZEBO YET!!!
+        gazebo::msgs::ServerControl serverCntrl;
+        serverCntrl.set_open_filename(file.toStdString());
+        this->serverCntPub->Publish(serverCntrl);
+        */
+
+        args.push_back(file);
+        startServer();
+    }
+    else
+    {
+        stopServer();
+    }
 }
 
 
@@ -168,28 +200,42 @@ void GUIWindow::startServer()
     server_process->start("./gzserver", args);
 
     pauseButton->setDisabled(false);
-    openWorldButton->setDisabled(false);
     loggingButton->setDisabled(false);
+    openClientButton->setDisabled(false);
 
     GUIComClient *clientThread = new GUIComClient(this);
     clientThread->start();
+
+    openWorldButton->setText("Stop Server");
+    openLogButton->setText("Stop Server");
 }
 
 
 void GUIWindow::stopServer()
 {
     server_process->terminate();
-    server_process->waitForFinished(1000);
+    server_process->waitForFinished(-1);
     server_process->kill();
     delete server_process;
     server_process = NULL;
 
     pauseButton->setDisabled(true);
-    openWorldButton->setDisabled(true);
     loggingButton->setDisabled(true);
+    openClientButton->setDisabled(true);
 
-    startServerButton->setText("Start Server");
+    openWorldButton->setText("Start World");
+    openLogButton->setText("Start Log");
 }
+
+
+/////////////////////////////////////////////////
+void GUIWindow::OnOpenClientClick()
+{
+    QProcess *client_process = new QProcess(this);
+    client_process->start("gzclient");
+    child_processes.push_back(client_process);
+}
+
 
 /////////////////////////////////////////////////
 void GUIComClient::run()
