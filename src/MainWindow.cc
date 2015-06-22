@@ -8,6 +8,7 @@
 #include <QFrame>
 #include <QPushButton>
 #include <QFileDialog>
+#include <QCheckBox>
 
 #include <sys/wait.h>
 #include <unistd.h>
@@ -18,8 +19,11 @@
 #include "gazebo/Server.hh"
 #include "gazebo/gui/GuiIface.hh"
 
-
 #include "MainWindow.hh"
+
+#define WORLDS_FOLDER "../worlds"
+#define LOGS_FOLDER "../logs"
+
 
 using namespace gazebo;
 
@@ -27,6 +31,8 @@ using namespace gazebo;
 /////////////////////////////////////////////////
 GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
 {
+    this->setAttribute(Qt::WA_DeleteOnClose);
+
     server_process = NULL;
     this->argc = p_argc;
     this->argv = p_argv;
@@ -48,12 +54,6 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
     frameLayout->addWidget(openLogButton);
 
 
-    // Create a push button, and connect it to the OnButton function
-    pauseButton = new QPushButton("Stop Simulation");
-    pauseButton->setDisabled(true);
-    connect(pauseButton, SIGNAL(clicked()), this, SLOT(OnPauseButtonClick()));
-    frameLayout->addWidget(pauseButton);
-
     loggingButton = new QPushButton("Start Logging");
     loggingButton->setDisabled(true);
     connect(loggingButton, SIGNAL(clicked()), this, SLOT(OnLogButtonClick()));
@@ -63,6 +63,18 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
     openClientButton->setDisabled(true);
     connect(openClientButton, SIGNAL(clicked()), this, SLOT(OnOpenClientClick()));
     frameLayout->addWidget(openClientButton);
+
+    // Create a push button, and connect it to the OnButton function
+    pauseButton = new QCheckBox("Paused");
+    connect(pauseButton, SIGNAL(clicked()), this, SLOT(OnPauseButtonClick()));
+    frameLayout->addWidget(pauseButton);
+
+
+    // Create a push button, and connect it to the OnButton function
+    startClientAuto = new QCheckBox("Auto Client start");
+    startClientAuto->setChecked(true);
+    frameLayout->addWidget(startClientAuto);
+
 
 
     mainFrame->setLayout(frameLayout);
@@ -87,7 +99,15 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
 GUIWindow::~GUIWindow()
 {
     if(server_process != NULL)
+    {
+        gazebo::msgs::LogControl logCntrl;
+        logCntrl.set_stop(true);
+        isLoggingPaused = true;
+        this->logCntPub->Publish(logCntrl);
+
         stopServer();
+    }
+
 
     for( std::list<QProcess*>::iterator processItr = child_processes.begin(); processItr != child_processes.end(); ++processItr)
     {
@@ -102,22 +122,37 @@ GUIWindow::~GUIWindow()
 /////////////////////////////////////////////////
 void GUIWindow::OnPauseButtonClick()
 {
-    msgs::WorldControl worldMsg;
-
-    if(isSimulationPaused)
+    if(server_process != NULL)
     {
-        worldMsg.set_pause(false);
-        isSimulationPaused = false;
-        pauseButton->setText("Stop Simulation");
+        msgs::WorldControl worldMsg;
+
+        if(pauseButton->checkState())
+        {
+            worldMsg.set_pause(false);
+            isSimulationPaused = false;
+        }
+        else
+        {
+            worldMsg.set_pause(true);
+            isSimulationPaused = true;
+        }
+
+        this->worldCntPub->Publish(worldMsg);
     }
     else
     {
-        worldMsg.set_pause(true);
-        isSimulationPaused = true;
-        pauseButton->setText("Start Simulation");
+        if(pauseButton->checkState())
+        {
+            args.append("-u");
+        }
+        else
+        {
+            if( int indx = args.indexOf("-u") > 0 )
+            {
+                args[indx] = "";
+            }
+        }
     }
-
-    this->worldCntPub->Publish(worldMsg);
 }
 
 
@@ -149,7 +184,7 @@ void GUIWindow::OnOpenLogButtonClick()
 {
     if(server_process == NULL)
     {
-        QString file = QFileDialog::getOpenFileName(this, tr("Open Log"), "/home");
+        QString file = QFileDialog::getOpenFileName(this, tr("Open Log"), LOGS_FOLDER);
 
         if(file.isEmpty())
             return;
@@ -164,12 +199,13 @@ void GUIWindow::OnOpenLogButtonClick()
     }
 }
 
+
 /////////////////////////////////////////////////
 void GUIWindow::OnOpenWorldClick()
 {
     if(server_process == NULL)
     {
-        QString file = QFileDialog::getOpenFileName(this, tr("Open World"), "/home");
+        QString file = QFileDialog::getOpenFileName(this, tr("Open World"), WORLDS_FOLDER);
 
         if(file.isEmpty())
             return;
@@ -208,11 +244,18 @@ void GUIWindow::startServer()
 
     openWorldButton->setText("Stop Server");
     openLogButton->setText("Stop Server");
+
+    if(startClientAuto->checkState())
+        OnOpenClientClick();
 }
 
 
 void GUIWindow::stopServer()
 {
+    gazebo::msgs::ServerControl serverCntrl;
+    serverCntrl.set_stop(true);
+    this->serverCntPub->Publish(serverCntrl);
+
     server_process->terminate();
     server_process->waitForFinished(-1);
     server_process->kill();
@@ -257,7 +300,7 @@ void GUIComClient::run()
 
 
     gazebo::msgs::LogControl logCntlr_path, logCntlr_encode;
-    logCntlr_path.set_base_path("logs");
+    logCntlr_path.set_base_path(LOGS_FOLDER);
     logCntlr_encode.set_encoding("txt");
     parent->logCntPub->Publish(logCntlr_path);
     parent->logCntPub->Publish(logCntlr_encode);

@@ -6,6 +6,7 @@
 #include <QThread>
 
 class QPushButton;
+class QCheckBox;
 class QProcess;
 
 namespace gazebo
@@ -38,11 +39,13 @@ namespace gazebo
       private: bool isSimulationPaused;
       private: bool isLoggingPaused;
 
-      private: QPushButton *pauseButton;
+
       private: QPushButton *loggingButton;
       private: QPushButton *openLogButton;
       private: QPushButton *openWorldButton;
       private: QPushButton *openClientButton;
+      private: QCheckBox   *pauseButton;
+      private: QCheckBox   *startClientAuto;
 
       private: transport::NodePtr      node;
       private: transport::PublisherPtr worldCntPub;
