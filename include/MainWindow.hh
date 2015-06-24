@@ -59,6 +59,7 @@ namespace gazebo
 
       private: void startServer();
       private: void stopServer();
+      private: void removeWorldOrLogFromArgs();
 
       protected slots: void OnPauseButtonClick();
       protected slots: void OnOpenWorldClick();

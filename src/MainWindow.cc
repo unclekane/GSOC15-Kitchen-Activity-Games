@@ -107,15 +107,6 @@ GUIWindow::~GUIWindow()
 
         stopServer();
     }
-
-
-    for( std::list<QProcess*>::iterator processItr = child_processes.begin(); processItr != child_processes.end(); ++processItr)
-    {
-        (*processItr)->terminate();
-        (*processItr)->kill();
-        (*processItr)->waitForFinished(-1);
-        delete (*processItr);
-    }
 }
 
 
@@ -178,12 +169,34 @@ void GUIWindow::OnLogButtonClick()
 }
 
 
+/////////////////////////////////////////////////
+void GUIWindow::removeWorldOrLogFromArgs()
+{
+    for(int i = 0; i < args.size(); i++)
+    {
+        if( args.at(i).contains(".sdf") )
+        {
+            args.removeAt(i);
+            break;
+        }
+
+        if( args.at(i).contains("-p") )
+        {
+            args.removeAt(i);
+            args.removeAt(i + 1);
+            break;
+        }
+    }
+}
+
 
 /////////////////////////////////////////////////
 void GUIWindow::OnOpenLogButtonClick()
 {
     if(server_process == NULL)
     {
+        removeWorldOrLogFromArgs();
+
         QString file = QFileDialog::getOpenFileName(this, tr("Open Log"), LOGS_FOLDER);
 
         if(file.isEmpty())
@@ -205,16 +218,12 @@ void GUIWindow::OnOpenWorldClick()
 {
     if(server_process == NULL)
     {
+        removeWorldOrLogFromArgs();
+
         QString file = QFileDialog::getOpenFileName(this, tr("Open World"), WORLDS_FOLDER);
 
         if(file.isEmpty())
             return;
-
-        /* NOT IMPLEMENTED IN GAZEBO YET!!!
-        gazebo::msgs::ServerControl serverCntrl;
-        serverCntrl.set_open_filename(file.toStdString());
-        this->serverCntPub->Publish(serverCntrl);
-        */
 
         args.push_back(file);
         startServer();
@@ -261,6 +270,17 @@ void GUIWindow::stopServer()
     server_process->kill();
     delete server_process;
     server_process = NULL;
+
+
+    for( std::list<QProcess*>::iterator processItr = child_processes.begin(); processItr != child_processes.end(); ++processItr)
+    {
+        (*processItr)->terminate();
+        (*processItr)->kill();
+        (*processItr)->waitForFinished(-1);
+        delete (*processItr);
+    }
+    child_processes.clear();
+
 
     pauseButton->setDisabled(true);
     loggingButton->setDisabled(true);
