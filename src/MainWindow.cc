@@ -156,7 +156,10 @@ void GUIWindow::OnLoadServerPluginClick()
         QString file = QFileDialog::getOpenFileName(this, tr("Open Server Plugin"), PLUGINS_SERVER_FOLDER);
 
         if(file.isEmpty())
+        {
+            loadServerPlugin->setChecked(false);
             return;
+        }
 
         args.append("-s");
         args.append(file);
@@ -184,7 +187,10 @@ void GUIWindow::OnLoadClientPluginClick()
         QString file = QFileDialog::getOpenFileName(this, tr("Open Client Plugin"), PLUGINS_CLIENT_FOLDER);
 
         if(file.isEmpty())
+        {
+            loadClientPlugin->setChecked(false);
             return;
+        }
 
         args.append("-g " + file);
     }
