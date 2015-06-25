@@ -9,6 +9,8 @@
 #include <QPushButton>
 #include <QFileDialog>
 #include <QCheckBox>
+#include <QPlainTextEdit>
+
 
 #include <sys/wait.h>
 #include <unistd.h>
@@ -23,7 +25,8 @@
 
 #define WORLDS_FOLDER "../worlds"
 #define LOGS_FOLDER "../logs"
-
+#define PLUGINS_SERVER_FOLDER "../plugins/server"
+#define PLUGINS_CLIENT_FOLDER "../plugins/client"
 
 using namespace gazebo;
 
@@ -36,6 +39,7 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
     server_process = NULL;
     this->argc = p_argc;
     this->argv = p_argv;
+    processOutputs = NULL;
 
     this->setStyleSheet("QFrame { background-color : rgba(100, 100, 100, 255); color : white; }");
 
@@ -64,17 +68,49 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
     connect(openClientButton, SIGNAL(clicked()), this, SLOT(OnOpenClientClick()));
     frameLayout->addWidget(openClientButton);
 
-    // Create a push button, and connect it to the OnButton function
+    QFrame* line = new QFrame();
+    line->setFrameShape(QFrame::HLine);
+    line->setFrameShadow(QFrame::Sunken);
+    frameLayout->addWidget(line);
+
+
     pauseButton = new QCheckBox("Paused");
+    pauseButton->setStyleSheet("color:#ffffff;");
     connect(pauseButton, SIGNAL(clicked()), this, SLOT(OnPauseButtonClick()));
     frameLayout->addWidget(pauseButton);
 
 
-    // Create a push button, and connect it to the OnButton function
     startClientAuto = new QCheckBox("Auto Client start");
     startClientAuto->setChecked(true);
+    startClientAuto->setStyleSheet("color:#ffffff;");
     frameLayout->addWidget(startClientAuto);
 
+    QFrame* line2 = new QFrame();
+    line2->setFrameShape(QFrame::HLine);
+    line2->setFrameShadow(QFrame::Sunken);
+    frameLayout->addWidget(line2);
+
+
+    loadServerPlugin = new QCheckBox("Load Server Plugin");
+    loadServerPlugin->setStyleSheet("color:#ffffff;");
+    connect(loadServerPlugin, SIGNAL(clicked()), this, SLOT(OnLoadServerPluginClick()));
+    frameLayout->addWidget(loadServerPlugin);
+
+    loadClientPlugin = new QCheckBox("Load Client Plugin");
+    loadClientPlugin->setStyleSheet("color:#ffffff;");
+    connect(loadClientPlugin, SIGNAL(clicked()), this, SLOT(OnLoadClientPluginClick()));
+    frameLayout->addWidget(loadClientPlugin);
+
+
+    QFrame* line3 = new QFrame();
+    line3->setFrameShape(QFrame::HLine);
+    line3->setFrameShadow(QFrame::Sunken);
+    frameLayout->addWidget(line3);
+
+    verboseOutput = new QCheckBox("Verbose");
+    verboseOutput->setStyleSheet("color:#ffffff;");
+    connect(verboseOutput, SIGNAL(clicked()), this, SLOT(OnVerboseClick()));
+    frameLayout->addWidget(verboseOutput);
 
 
     mainFrame->setLayout(frameLayout);
@@ -106,6 +142,64 @@ GUIWindow::~GUIWindow()
         this->logCntPub->Publish(logCntrl);
 
         stopServer();
+
+        delete processOutputs;
+    }
+}
+
+
+/////////////////////////////////////////////////
+void GUIWindow::OnLoadServerPluginClick()
+{
+    if(loadServerPlugin->checkState())
+    {
+        QString file = QFileDialog::getOpenFileName(this, tr("Open Server Plugin"), PLUGINS_SERVER_FOLDER);
+
+        if(file.isEmpty())
+            return;
+
+        args.append("-s");
+        args.append(file);
+    }
+    else
+    {
+        for(int i = 0; i < args.size(); i++)
+        {
+            if( args.at(i).contains("-s") )
+            {
+                args.removeAt(i);
+                args.removeAt(i + 1);
+                break;
+            }
+        }
+    }
+}
+
+
+/////////////////////////////////////////////////
+void GUIWindow::OnLoadClientPluginClick()
+{
+    if(loadClientPlugin->checkState())
+    {
+        QString file = QFileDialog::getOpenFileName(this, tr("Open Client Plugin"), PLUGINS_CLIENT_FOLDER);
+
+        if(file.isEmpty())
+            return;
+
+        args.append("-g");
+        args.append(file);
+    }
+    else
+    {
+        for(int i = 0; i < args.size(); i++)
+        {
+            if( args.at(i).contains("-g") )
+            {
+                args.removeAt(i);
+                args.removeAt(i + 1);
+                break;
+            }
+        }
     }
 }
 
@@ -244,6 +338,12 @@ void GUIWindow::startServer()
     server_process = new QProcess(this);
     server_process->start("./gzserver", args);
 
+    if( verboseOutput->isChecked() )
+    {
+        connect(server_process, SIGNAL(readyReadStandardOutput()), this, SLOT(OnReadServerStdOutput()));
+        connect(server_process, SIGNAL(readyReadStandardError()),  this, SLOT(OnReadServerErrOutput()));
+    }
+
     pauseButton->setDisabled(false);
     loggingButton->setDisabled(false);
     openClientButton->setDisabled(false);
@@ -297,6 +397,12 @@ void GUIWindow::OnOpenClientClick()
     QProcess *client_process = new QProcess(this);
     client_process->start("gzclient");
     child_processes.push_back(client_process);
+
+    if( verboseOutput->isChecked() )
+    {
+        connect(client_process, SIGNAL(readyReadStandardOutput()), this, SLOT(OnReadClientStdOutput()));
+        connect(client_process, SIGNAL(readyReadStandardError()),  this, SLOT(OnReadClientErrOutput()));
+    }
 }
 
 
@@ -329,4 +435,89 @@ void GUIComClient::run()
       gazebo::common::Time::MSleep(10);
 
     gazebo::shutdown();
+}
+
+
+void GUIWindow::OnVerboseClick()
+{
+    if( verboseOutput->isChecked() )
+    {
+        args.append("--verbose");
+
+        if( processOutputs == NULL )
+        {
+            processOutputs = new QTextEdit();
+            processOutputs->show();
+        }
+    }
+    else
+    {
+        if( int indx = args.indexOf("--verbose") > 0 )
+        {
+            args[indx] = "";
+        }
+
+        if( processOutputs != NULL )
+        {
+            delete processOutputs;
+            processOutputs = NULL;
+        }
+    }
+}
+
+/////////////////////////////////////////////////
+void GUIWindow::readProcessOutput( const char *p_process, const char *p_logLevel, QByteArray p_message )
+{
+    std::cerr << p_process << " " << p_logLevel << QString(p_message).toStdString().c_str();
+    QString message;
+    message.append(p_process);
+    message.append(" ");
+    message.append(p_logLevel);
+    message.append(" : ");
+
+    QString tmp = QObject::trUtf8(p_message);
+    tmp.replace("\033[32m","");
+    tmp.replace("\033[33m","");
+    tmp.replace("\033[0m","");
+    tmp.replace("\033]0;~","");
+    tmp.replace("\033[1m","");
+    tmp.replace("\033[2m","");
+    tmp.replace("\033[3m","");
+    tmp.replace("\033[4m","");
+    tmp.replace("\033[5m","");
+    tmp.replace("\033[6m","");
+    tmp.replace("\033[7m","");
+    tmp.replace("\007","");
+
+    message.append(tmp);
+
+    processOutputs->append(message);
+}
+
+
+/////////////////////////////////////////////////
+void GUIWindow::OnReadServerStdOutput()
+{
+    readProcessOutput( "server", "vebose", server_process->readAllStandardOutput() );
+}
+
+
+/////////////////////////////////////////////////
+void GUIWindow::OnReadServerErrOutput()
+{
+    readProcessOutput( "Server", "error", server_process->readAllStandardError() );
+}
+
+
+/////////////////////////////////////////////////
+void GUIWindow::OnReadClientStdOutput()
+{
+    readProcessOutput( "Client", "verbose", server_process->readAllStandardOutput() );
+}
+
+
+/////////////////////////////////////////////////
+void GUIWindow::OnReadClientErrOutput()
+{
+    readProcessOutput( "Client", "error", server_process->readAllStandardError() );
 }
