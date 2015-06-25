@@ -186,8 +186,7 @@ void GUIWindow::OnLoadClientPluginClick()
         if(file.isEmpty())
             return;
 
-        args.append("-g");
-        args.append(file);
+        args.append("-g " + file);
     }
     else
     {
@@ -446,7 +445,7 @@ void GUIWindow::OnVerboseClick()
 
         if( processOutputs == NULL )
         {
-            processOutputs = new QTextEdit();
+            processOutputs = new QPlainTextEdit();
             processOutputs->show();
         }
     }
@@ -468,7 +467,6 @@ void GUIWindow::OnVerboseClick()
 /////////////////////////////////////////////////
 void GUIWindow::readProcessOutput( const char *p_process, const char *p_logLevel, QByteArray p_message )
 {
-    std::cerr << p_process << " " << p_logLevel << QString(p_message).toStdString().c_str();
     QString message;
     message.append(p_process);
     message.append(" ");
