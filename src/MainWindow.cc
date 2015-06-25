@@ -489,7 +489,7 @@ void GUIWindow::readProcessOutput( const char *p_process, const char *p_logLevel
 
     message.append(tmp);
 
-    processOutputs->append(message);
+    processOutputs->appendPlainText(message);
 }
 
 
