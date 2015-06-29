@@ -126,7 +126,8 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
 
     for (int i = 1; i < this->argc; ++i)
     {
-        args.push_back(this->argv[i]);
+        server_args.push_back(this->argv[i]);
+        client_args.push_back(this->argv[i]);
     }
 }
 
@@ -143,6 +144,7 @@ GUIWindow::~GUIWindow()
 
         stopServer();
 
+        processOutputs->close();
         delete processOutputs;
     }
 }
@@ -161,17 +163,17 @@ void GUIWindow::OnLoadServerPluginClick()
             return;
         }
 
-        args.append("-s");
-        args.append(file);
+        server_args.append("-s");
+        server_args.append(file);
     }
     else
     {
-        for(int i = 0; i < args.size(); i++)
+        for(int i = 0; i < server_args.size(); i++)
         {
-            if( args.at(i).contains("-s") )
+            if( server_args.at(i).contains("-s") )
             {
-                args.removeAt(i);
-                args.removeAt(i + 1);
+                server_args.removeAt(i);
+                server_args.removeAt(i+1);
                 break;
             }
         }
@@ -192,16 +194,17 @@ void GUIWindow::OnLoadClientPluginClick()
             return;
         }
 
-        args.append("-g " + file);
+        client_args.append("-g");
+        client_args.append(file);
     }
     else
     {
-        for(int i = 0; i < args.size(); i++)
+        for(int i = 0; i < client_args.size(); i++)
         {
-            if( args.at(i).contains("-g") )
+            if( client_args.at(i).contains("-g") )
             {
-                args.removeAt(i);
-                args.removeAt(i + 1);
+                client_args.removeAt(i);
+                client_args.removeAt(i+1);
                 break;
             }
         }
@@ -233,13 +236,13 @@ void GUIWindow::OnPauseButtonClick()
     {
         if(pauseButton->checkState())
         {
-            args.append("-u");
+            server_args.append("-u");
         }
         else
         {
-            if( int indx = args.indexOf("-u") > 0 )
+            if( int indx = server_args.indexOf("-u") > 0 )
             {
-                args[indx] = "";
+                server_args[indx] = "";
             }
         }
     }
@@ -271,18 +274,18 @@ void GUIWindow::OnLogButtonClick()
 /////////////////////////////////////////////////
 void GUIWindow::removeWorldOrLogFromArgs()
 {
-    for(int i = 0; i < args.size(); i++)
+    for(int i = 0; i < server_args.size(); i++)
     {
-        if( args.at(i).contains(".sdf") )
+        if( server_args.at(i).contains(".sdf") )
         {
-            args.removeAt(i);
+            server_args.removeAt(i);
             break;
         }
 
-        if( args.at(i).contains("-p") )
+        if( server_args.at(i).contains("-p") )
         {
-            args.removeAt(i);
-            args.removeAt(i + 1);
+            server_args.removeAt(i);
+            server_args.removeAt(i + 1);
             break;
         }
     }
@@ -301,8 +304,8 @@ void GUIWindow::OnOpenLogButtonClick()
         if(file.isEmpty())
             return;
 
-        args.push_back("-p");
-        args.push_back(file);
+        server_args.push_back("-p");
+        server_args.push_back(file);
         startServer();
     }
     else
@@ -324,7 +327,7 @@ void GUIWindow::OnOpenWorldClick()
         if(file.isEmpty())
             return;
 
-        args.push_back(file);
+        server_args.push_back(file);
         startServer();
     }
     else
@@ -341,7 +344,7 @@ void GUIWindow::startServer()
         stopServer();
 
     server_process = new QProcess(this);
-    server_process->start("./gzserver", args);
+    server_process->start("./gzserver", server_args);
 
     if( verboseOutput->isChecked() )
     {
@@ -400,7 +403,7 @@ void GUIWindow::stopServer()
 void GUIWindow::OnOpenClientClick()
 {
     QProcess *client_process = new QProcess(this);
-    client_process->start("gzclient");
+    client_process->start("gzclient", client_args);
     child_processes.push_back(client_process);
 
     if( verboseOutput->isChecked() )
@@ -447,7 +450,8 @@ void GUIWindow::OnVerboseClick()
 {
     if( verboseOutput->isChecked() )
     {
-        args.append("--verbose");
+        server_args.append("--verbose");
+        client_args.append("--verbose");
 
         if( processOutputs == NULL )
         {
@@ -457,9 +461,14 @@ void GUIWindow::OnVerboseClick()
     }
     else
     {
-        if( int indx = args.indexOf("--verbose") > 0 )
+        if( int indx = server_args.indexOf("--verbose") > 0 )
         {
-            args[indx] = "";
+            server_args[indx] = "";
+        }
+
+        if( int indx = client_args.indexOf("--verbose") > 0 )
+        {
+            client_args[indx] = "";
         }
 
         if( processOutputs != NULL )
@@ -473,36 +482,39 @@ void GUIWindow::OnVerboseClick()
 /////////////////////////////////////////////////
 void GUIWindow::readProcessOutput( const char *p_process, const char *p_logLevel, QByteArray p_message )
 {
-    QString message;
-    message.append(p_process);
-    message.append(" ");
-    message.append(p_logLevel);
-    message.append(" : ");
+    if( p_message.size() > 0 )
+    {
+        QString message;
+        message.append(p_process);
+        message.append(" ");
+        message.append(p_logLevel);
+        message.append(" : ");
 
-    QString tmp = QObject::trUtf8(p_message);
-    tmp.replace("\033[32m","");
-    tmp.replace("\033[33m","");
-    tmp.replace("\033[0m","");
-    tmp.replace("\033]0;~","");
-    tmp.replace("\033[1m","");
-    tmp.replace("\033[2m","");
-    tmp.replace("\033[3m","");
-    tmp.replace("\033[4m","");
-    tmp.replace("\033[5m","");
-    tmp.replace("\033[6m","");
-    tmp.replace("\033[7m","");
-    tmp.replace("\007","");
+        QString tmp = QObject::trUtf8(p_message);
+        tmp.replace("\033[32m","");
+        tmp.replace("\033[33m","");
+        tmp.replace("\033[0m","");
+        tmp.replace("\033]0;~","");
+        tmp.replace("\033[1m","");
+        tmp.replace("\033[2m","");
+        tmp.replace("\033[3m","");
+        tmp.replace("\033[4m","");
+        tmp.replace("\033[5m","");
+        tmp.replace("\033[6m","");
+        tmp.replace("\033[7m","");
+        tmp.replace("\007","");
 
-    message.append(tmp);
+        message.append(tmp);
 
-    processOutputs->appendPlainText(message);
+        processOutputs->appendPlainText(message);
+    }
 }
 
 
 /////////////////////////////////////////////////
 void GUIWindow::OnReadServerStdOutput()
 {
-    readProcessOutput( "server", "vebose", server_process->readAllStandardOutput() );
+    readProcessOutput( "Server", "vebose", server_process->readAllStandardOutput() );
 }
 
 
@@ -516,12 +528,18 @@ void GUIWindow::OnReadServerErrOutput()
 /////////////////////////////////////////////////
 void GUIWindow::OnReadClientStdOutput()
 {
-    readProcessOutput( "Client", "verbose", server_process->readAllStandardOutput() );
+    for( std::list<QProcess*>::iterator processItr = child_processes.begin(); processItr != child_processes.end(); ++processItr)
+    {
+        readProcessOutput( "Client", "verbose", (*processItr)->readAllStandardOutput() );
+    }
 }
 
 
 /////////////////////////////////////////////////
 void GUIWindow::OnReadClientErrOutput()
 {
-    readProcessOutput( "Client", "error", server_process->readAllStandardError() );
+    for( std::list<QProcess*>::iterator processItr = child_processes.begin(); processItr != child_processes.end(); ++processItr)
+    {
+        readProcessOutput( "Client", "error", (*processItr)->readAllStandardError() );
+    }
 }

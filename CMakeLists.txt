@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
 project(KitchenActivityGames)
+add_subdirectory(src/clientPlugin_helloWorld)
+add_subdirectory(src/serverPlugin_helloWorld)
 
 # Find packages
 find_package (Qt4)

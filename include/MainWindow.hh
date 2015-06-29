@@ -36,7 +36,8 @@ namespace gazebo
 
       private: int         argc;
       private: char      **argv;
-      private: QStringList args;
+      private: QStringList server_args;
+      private: QStringList client_args;
       private: QProcess *server_process;
       private: std::list<QProcess*> child_processes;
       private: QPlainTextEdit *processOutputs;
