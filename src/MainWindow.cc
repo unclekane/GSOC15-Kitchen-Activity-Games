@@ -10,6 +10,7 @@
 #include <QFileDialog>
 #include <QCheckBox>
 #include <QPlainTextEdit>
+#include <QListWidget>
 
 
 #include <sys/wait.h>
@@ -113,6 +114,26 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
     frameLayout->addWidget(verboseOutput);
 
 
+    playListWindow = new QWidget();
+    playListWindow->setWindowTitle("Playlist");
+    playlistWidget = new QListWidget(playListWindow);
+    playlistWidget->setGeometry(0, 0, 200, 300);
+    playlistWidget->setSelectionMode(QAbstractItemView::SingleSelection);
+    playlistWidget->setDragEnabled(true);
+    playlistWidget->setDragDropMode(QAbstractItemView::InternalMove);
+    playlistWidget->viewport()->setAcceptDrops(true);
+    playlistWidget->setDropIndicatorShown(true);
+    playlistWidget->show();
+    playlistWidget->addItem("Test1");
+    playlistWidget->addItem("Test2");
+    playlistWidget->addItem("Tes3");
+
+    QPushButton *playBtn = new QPushButton(playListWindow);
+    playBtn->setText("Play");
+    playBtn->setGeometry(0,310, 200, 30);
+    playListWindow->show();
+
+
     mainFrame->setLayout(frameLayout);
     mainLayout->addWidget(mainFrame);
     frameLayout->setContentsMargins(0, 0, 0, 0);
@@ -143,10 +164,14 @@ GUIWindow::~GUIWindow()
         this->logCntPub->Publish(logCntrl);
 
         stopServer();
-
-        processOutputs->close();
-        delete processOutputs;
     }
+
+
+    processOutputs->close();
+    delete processOutputs;
+
+    playListWindow->close();
+    delete playListWindow;
 }
 
 

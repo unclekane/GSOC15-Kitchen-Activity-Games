@@ -11,6 +11,7 @@ class QPushButton;
 class QCheckBox;
 class QProcess;
 class QPlainTextEdit;
+class QListWidget;
 
 
 namespace gazebo
@@ -55,6 +56,9 @@ namespace gazebo
       private: QCheckBox   *loadServerPlugin;
       private: QCheckBox   *loadClientPlugin;
       private: QCheckBox   *verboseOutput;
+
+      private: QWidget     *playListWindow;
+      private: QListWidget *playlistWidget;
 
       private: transport::NodePtr      node;
       private: transport::PublisherPtr worldCntPub;
