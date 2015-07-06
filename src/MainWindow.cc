@@ -136,6 +136,8 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
     QPushButton *playBtn = new QPushButton(playListWindow);
     playBtn->setText("Play");
     playBtn->setGeometry(60, 310, 140, 30);
+    connect(addToPlayListBtn, SIGNAL(clicked()), this, SLOT(OnPlayBtnClick()));
+
     playListWindow->show();
 
 
@@ -218,7 +220,8 @@ void GUIWindow::OnLoadClientPluginClick()
     {
         QString file = QFileDialog::getOpenFileName(this, tr("Open Client Plugin"), PLUGINS_CLIENT_FOLDER);
 
-        if(file.isEmpty())
+        if( file.isEmpty()
+         && !file.contains(".so") )
         {
             loadClientPlugin->setChecked(false);
             return;
@@ -370,6 +373,10 @@ void GUIWindow::OnOpenWorldClick()
 /////////////////////////////////////////////////
 void GUIWindow::startServer()
 {
+    simTime   = 0;
+    pauseTime = 0;
+
+
     if(server_process != NULL)
         stopServer();
 
@@ -461,6 +468,7 @@ void GUIComClient::run()
     parent->worldCntPub  = parent->node->Advertise<msgs::WorldControl>("~/world_control");
     parent->serverCntPub = parent->node->Advertise<msgs::ServerControl>("/gazebo/server/control");
     parent->logCntPub    = parent->node->Advertise<msgs::LogControl>("~/log/control");
+    parent->aliveSubscrb = parent->node->Subscribe<gazebo::msgs::WorldStatistics, GUIWindow>("~/world_stats", &GUIWindow::aliveMsgHandler, parent);
 
 
     gazebo::msgs::LogControl logCntlr_path, logCntlr_encode;
@@ -581,7 +589,8 @@ void GUIWindow::OnAddToPlayBtnClick()
 {
     QString file = QFileDialog::getOpenFileName(this, tr("Open Log File"), LOGS_FOLDER);
 
-    if(file.isEmpty())
+    if( file.isEmpty()
+     && !file.contains(".log") )
         return;
 
     playlistWidget->addItem(file);
@@ -592,4 +601,45 @@ void GUIWindow::OnAddToPlayBtnClick()
 void GUIWindow::OnRemoveFromPlayBtnClick()
 {
     qDeleteAll( playlistWidget->selectedItems() );
+}
+
+
+/////////////////////////////////////////////////
+void GUIWindow::OnPlayBtnClick()
+{
+    playIndx = 0;
+    playNextLog();
+}
+
+
+/////////////////////////////////////////////////
+void GUIWindow::playNextLog()
+{
+    removeWorldOrLogFromArgs();
+    playIndx++;
+
+    playlistWidget->setCurrentRow(playIndx);
+    QString file = playlistWidget->item(playIndx)->text();
+
+    if(file.isEmpty())
+        return;
+
+    server_args.push_back("-p");
+    server_args.push_back(file);
+    startServer();
+}
+
+
+/////////////////////////////////////////////////
+void GUIWindow::aliveMsgHandler(ConstWorldStatisticsPtr &p_msg)
+{
+    if( simTime   >= p_msg->sim_time().nsec()
+     && pauseTime >= p_msg->pause_time().nsec() )
+    {
+        playNextLog();
+        return;
+    }
+
+    simTime   = p_msg->sim_time().nsec();
+    pauseTime = p_msg->pause_time().nsec();
 }

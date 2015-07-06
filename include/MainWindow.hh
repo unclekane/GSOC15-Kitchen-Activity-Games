@@ -47,6 +47,10 @@ namespace gazebo
       private: bool isSimulationPaused;
       private: bool isLoggingPaused;
 
+      private: int playIndx;
+      private: int simTime;
+      private: int pauseTime;
+
 
       private: QPushButton *loggingButton;
       private: QPushButton *openLogButton;
@@ -61,11 +65,11 @@ namespace gazebo
       private: QWidget     *playListWindow;
       private: PlayList    *playlistWidget;
 
-      private: transport::NodePtr      node;
-      private: transport::PublisherPtr worldCntPub;
-      private: transport::PublisherPtr serverCntPub;
-      private: transport::PublisherPtr logCntPub;
-
+      private: transport::NodePtr       node;
+      private: transport::PublisherPtr  worldCntPub;
+      private: transport::PublisherPtr  serverCntPub;
+      private: transport::PublisherPtr  logCntPub;
+      private: transport::SubscriberPtr aliveSubscrb;
 
 
       public: GUIWindow(int _argc, char **_argv);
@@ -75,7 +79,8 @@ namespace gazebo
       private: void stopServer();
       private: void removeWorldOrLogFromArgs();
       private: void readProcessOutput(const char *p_process, const char *p_logLevel, QByteArray p_message);
-
+      private: void aliveMsgHandler(ConstWorldStatisticsPtr &_msg);
+      private: void playNextLog();
 
       protected slots: void OnPauseButtonClick();
       protected slots: void OnOpenWorldClick();
@@ -95,6 +100,7 @@ namespace gazebo
 
       protected slots: void OnAddToPlayBtnClick();
       protected slots: void OnRemoveFromPlayBtnClick();
+      protected slots: void OnPlayBtnClick();
     };
 }
 #endif
