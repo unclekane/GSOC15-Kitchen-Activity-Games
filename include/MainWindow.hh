@@ -5,6 +5,7 @@
 #include <QWidget>
 #include <QThread>
 #include <QByteArray>
+#include "PlayList.hh"
 
 
 class QPushButton;
@@ -58,7 +59,7 @@ namespace gazebo
       private: QCheckBox   *verboseOutput;
 
       private: QWidget     *playListWindow;
-      private: QListWidget *playlistWidget;
+      private: PlayList    *playlistWidget;
 
       private: transport::NodePtr      node;
       private: transport::PublisherPtr worldCntPub;
@@ -91,6 +92,9 @@ namespace gazebo
 
       protected slots: void OnReadClientStdOutput();
       protected slots: void OnReadClientErrOutput();
+
+      protected slots: void OnAddToPlayBtnClick();
+      protected slots: void OnRemoveFromPlayBtnClick();
     };
 }
 #endif

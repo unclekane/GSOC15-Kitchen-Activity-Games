@@ -32,12 +32,13 @@ include_directories(SYSTEM ${GAZEBO_INCLUDE_DIRS} ${OGRE_INCLUDE_DIRS} ${OGRE-Te
 link_directories(${GAZEBO_LIBRARY_DIRS})
 
 # Create libraries and executables
-QT4_WRAP_CPP(headers_MOC include/MainWindow.hh)
+QT4_WRAP_CPP(headers_MOC include/MainWindow.hh
+                         include/PlayList.hh )
 
 
 add_executable(gzserver src/ServerMain src/ServerMain.cc)
 target_link_libraries(gzserver ${GAZEBO_LIBRARIES} gazebo_util ${Boost_LIBRARIES} ${PROTOBUF_LIBRARIES} ${QT_LIBRARIES} QtTest pthread)
 
 
-add_executable(KitchenActivityGamesGUI src/MinimalClientMain.cc src/MainWindow.cc ${headers_MOC} )
+add_executable(KitchenActivityGamesGUI src/MinimalClientMain.cc src/MainWindow.cc src/PlayList.cc  ${headers_MOC} )
 target_link_libraries(KitchenActivityGamesGUI ${GAZEBO_LIBRARIES} gazebo_util ${Boost_LIBRARIES} ${OGRE_LIBRARIES} ${OGRE-Terrain_LIBRARIES} ${PROTOBUF_LIBRARIES} ${QT_LIBRARIES} QtTest pthread)

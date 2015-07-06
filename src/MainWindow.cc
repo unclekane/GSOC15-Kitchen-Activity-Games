@@ -116,21 +116,26 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
 
     playListWindow = new QWidget();
     playListWindow->setWindowTitle("Playlist");
-    playlistWidget = new QListWidget(playListWindow);
+
+    playlistWidget = new PlayList(playListWindow);
     playlistWidget->setGeometry(0, 0, 200, 300);
-    playlistWidget->setSelectionMode(QAbstractItemView::SingleSelection);
-    playlistWidget->setDragEnabled(true);
-    playlistWidget->setDragDropMode(QAbstractItemView::InternalMove);
-    playlistWidget->viewport()->setAcceptDrops(true);
-    playlistWidget->setDropIndicatorShown(true);
-    playlistWidget->show();
-    playlistWidget->addItem("Test1");
-    playlistWidget->addItem("Test2");
-    playlistWidget->addItem("Tes3");
+
+
+
+    QPushButton *addToPlayListBtn = new QPushButton(playListWindow);
+    addToPlayListBtn->setText("+");
+    addToPlayListBtn->setGeometry(0, 310, 20, 30);
+    connect(addToPlayListBtn, SIGNAL(clicked()), this, SLOT(OnAddToPlayBtnClick()));
+
+    QPushButton *removeFromPlayListBtn = new QPushButton(playListWindow);
+    removeFromPlayListBtn->setText("-");
+    removeFromPlayListBtn->setGeometry(30, 310, 20, 30);
+    connect(removeFromPlayListBtn, SIGNAL(clicked()), this, SLOT(OnRemoveFromPlayBtnClick()));
+
 
     QPushButton *playBtn = new QPushButton(playListWindow);
     playBtn->setText("Play");
-    playBtn->setGeometry(0,310, 200, 30);
+    playBtn->setGeometry(60, 310, 140, 30);
     playListWindow->show();
 
 
@@ -567,4 +572,24 @@ void GUIWindow::OnReadClientErrOutput()
     {
         readProcessOutput( "Client", "error", (*processItr)->readAllStandardError() );
     }
+}
+
+
+
+/////////////////////////////////////////////////
+void GUIWindow::OnAddToPlayBtnClick()
+{
+    QString file = QFileDialog::getOpenFileName(this, tr("Open Log File"), LOGS_FOLDER);
+
+    if(file.isEmpty())
+        return;
+
+    playlistWidget->addItem(file);
+}
+
+
+/////////////////////////////////////////////////
+void GUIWindow::OnRemoveFromPlayBtnClick()
+{
+    qDeleteAll( playlistWidget->selectedItems() );
 }
