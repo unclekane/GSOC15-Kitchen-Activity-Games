@@ -11,7 +11,6 @@
 class QPushButton;
 class QCheckBox;
 class QProcess;
-class QPlainTextEdit;
 class QListWidget;
 
 
@@ -42,7 +41,6 @@ namespace gazebo
       private: QStringList client_args;
       private: QProcess *server_process;
       private: std::list<QProcess*> child_processes;
-      private: QPlainTextEdit *processOutputs;
 
       private: bool isSimulationPaused;
       private: bool isLoggingPaused;

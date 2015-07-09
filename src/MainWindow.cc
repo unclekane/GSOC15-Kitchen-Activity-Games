@@ -9,7 +9,6 @@
 #include <QPushButton>
 #include <QFileDialog>
 #include <QCheckBox>
-#include <QPlainTextEdit>
 #include <QListWidget>
 
 
@@ -40,7 +39,6 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
     server_process = NULL;
     this->argc = p_argc;
     this->argv = p_argv;
-    processOutputs = NULL;
 
     this->setStyleSheet("QFrame { background-color : rgba(100, 100, 100, 255); color : white; }");
 
@@ -54,7 +52,7 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
     connect(openWorldButton, SIGNAL(clicked()), this, SLOT(OnOpenWorldClick()));
     frameLayout->addWidget(openWorldButton);
 
-    openLogButton = new QPushButton("Start Log", this);
+    openLogButton = new QPushButton("Load Log", this);
     connect(openLogButton, SIGNAL(clicked()), this, SLOT(OnOpenLogButtonClick()));
     frameLayout->addWidget(openLogButton);
 
@@ -172,10 +170,6 @@ GUIWindow::~GUIWindow()
 
         stopServer();
     }
-
-
-    processOutputs->close();
-    delete processOutputs;
 
     playListWindow->close();
     delete playListWindow;
@@ -432,7 +426,7 @@ void GUIWindow::stopServer()
     openClientButton->setDisabled(true);
 
     openWorldButton->setText("Start World");
-    openLogButton->setText("Start Log");
+    openLogButton->setText("Load Log");
 }
 
 
@@ -489,12 +483,6 @@ void GUIWindow::OnVerboseClick()
     {
         server_args.append("--verbose");
         client_args.append("--verbose");
-
-        if( processOutputs == NULL )
-        {
-            processOutputs = new QPlainTextEdit();
-            processOutputs->show();
-        }
     }
     else
     {
@@ -506,12 +494,6 @@ void GUIWindow::OnVerboseClick()
         if( int indx = client_args.indexOf("--verbose") > 0 )
         {
             client_args[indx] = "";
-        }
-
-        if( processOutputs != NULL )
-        {
-            delete processOutputs;
-            processOutputs = NULL;
         }
     }
 }
@@ -527,23 +509,9 @@ void GUIWindow::readProcessOutput( const char *p_process, const char *p_logLevel
         message.append(p_logLevel);
         message.append(" : ");
 
-        QString tmp = QObject::trUtf8(p_message);
-        tmp.replace("\033[32m","");
-        tmp.replace("\033[33m","");
-        tmp.replace("\033[0m","");
-        tmp.replace("\033]0;~","");
-        tmp.replace("\033[1m","");
-        tmp.replace("\033[2m","");
-        tmp.replace("\033[3m","");
-        tmp.replace("\033[4m","");
-        tmp.replace("\033[5m","");
-        tmp.replace("\033[6m","");
-        tmp.replace("\033[7m","");
-        tmp.replace("\007","");
+        message.append(p_message);
 
-        message.append(tmp);
-
-        processOutputs->appendPlainText(message);
+        std::cout << message.toStdString().c_str() << std::endl;
     }
 }
 
