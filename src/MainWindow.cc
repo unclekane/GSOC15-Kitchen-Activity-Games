@@ -470,7 +470,6 @@ void GUIComClient::run()
     parent->logCntPub    = parent->node->Advertise<msgs::LogControl>("~/log/control");
     parent->aliveSubscrb = parent->node->Subscribe<gazebo::msgs::WorldStatistics, GUIWindow>("~/world_stats", &GUIWindow::aliveMsgHandler, parent);
 
-
     gazebo::msgs::LogControl logCntlr_path, logCntlr_encode;
     logCntlr_path.set_base_path(LOGS_FOLDER);
     logCntlr_encode.set_encoding("txt");
@@ -615,24 +614,29 @@ void GUIWindow::OnPlayBtnClick()
 /////////////////////////////////////////////////
 void GUIWindow::playNextLog()
 {
-    removeWorldOrLogFromArgs();
-    playIndx++;
+    if( playlistWidget->count() > playIndx )
+    {
+        removeWorldOrLogFromArgs();
+        playIndx++;
 
-    playlistWidget->setCurrentRow(playIndx);
-    QString file = playlistWidget->item(playIndx)->text();
+        playlistWidget->setCurrentRow(playIndx);
+        QString file = playlistWidget->item(playIndx)->text();
 
-    if(file.isEmpty())
-        return;
+        if(file.isEmpty())
+            return;
 
-    server_args.push_back("-p");
-    server_args.push_back(file);
-    startServer();
+        server_args.push_back("-p");
+        server_args.push_back(file);
+        startServer();
+    }
 }
 
 
 /////////////////////////////////////////////////
 void GUIWindow::aliveMsgHandler(ConstWorldStatisticsPtr &p_msg)
 {
+    std::cout << p_msg->DebugString();
+
     if( simTime   >= p_msg->sim_time().nsec()
      && pauseTime >= p_msg->pause_time().nsec() )
     {
