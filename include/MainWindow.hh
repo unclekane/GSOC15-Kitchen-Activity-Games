@@ -23,9 +23,15 @@ namespace gazebo
         Q_OBJECT
 
         private: GUIWindow *parent;
+        public: bool DoRun;
 
         public : GUIComClient(GUIWindow *p_parent) : parent(p_parent) {}
+
+        private: void aliveMsgHandler(ConstWorldStatisticsPtr &p_msg);
         private: void run();
+
+        private: signals: void nextLog();
+
     };
 
 
@@ -37,17 +43,17 @@ namespace gazebo
 
       private: int         argc;
       private: char      **argv;
-      private: QStringList server_args;
-      private: QStringList client_args;
-      private: QProcess *server_process;
+
+      private: QStringList   server_args;
+      private: QStringList   client_args;
+      private: QProcess     *server_process;
+      private: GUIComClient *clientThread;
       private: std::list<QProcess*> child_processes;
 
       private: bool isSimulationPaused;
       private: bool isLoggingPaused;
 
       private: int playIndx;
-      private: int simTime;
-      private: int pauseTime;
 
 
       private: QPushButton *loggingButton;
@@ -59,6 +65,8 @@ namespace gazebo
       private: QCheckBox   *loadServerPlugin;
       private: QCheckBox   *loadClientPlugin;
       private: QCheckBox   *verboseOutput;
+      private: QCheckBox   *showPlaylist;
+
 
       private: QWidget     *playListWindow;
       private: PlayList    *playlistWidget;
@@ -96,9 +104,12 @@ namespace gazebo
       protected slots: void OnReadClientStdOutput();
       protected slots: void OnReadClientErrOutput();
 
+      protected slots: void OnShowPlaylist();
       protected slots: void OnAddToPlayBtnClick();
       protected slots: void OnRemoveFromPlayBtnClick();
       protected slots: void OnPlayBtnClick();
+
+      public slots: void NextLogFile();
     };
 }
 #endif

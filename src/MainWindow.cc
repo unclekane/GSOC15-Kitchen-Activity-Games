@@ -27,6 +27,9 @@
 #define LOGS_FOLDER "../logs"
 #define PLUGINS_SERVER_FOLDER "../plugins/server"
 #define PLUGINS_CLIENT_FOLDER "../plugins/client"
+#define WAIT_FOR_SERVER_SHUTDOWN_IN_MS 1000
+#define WAIT_FOR_CLIENT_SHUTDOWN_IN_MS 5000
+#define UNSAFE_SERVER_SHUTDOWN false
 
 using namespace gazebo;
 
@@ -37,6 +40,7 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
     this->setAttribute(Qt::WA_DeleteOnClose);
 
     server_process = NULL;
+    clientThread   = NULL;
     this->argc = p_argc;
     this->argv = p_argv;
 
@@ -84,6 +88,12 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
     startClientAuto->setStyleSheet("color:#ffffff;");
     frameLayout->addWidget(startClientAuto);
 
+    showPlaylist = new QCheckBox("Playlist");
+    showPlaylist->setStyleSheet("color:#ffffff;");
+    connect(showPlaylist, SIGNAL(clicked()), this, SLOT(OnShowPlaylist()));
+    frameLayout->addWidget(showPlaylist);
+
+
     QFrame* line2 = new QFrame();
     line2->setFrameShape(QFrame::HLine);
     line2->setFrameShadow(QFrame::Sunken);
@@ -112,6 +122,8 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
     frameLayout->addWidget(verboseOutput);
 
 
+    // PLAYLIST WINDOW
+
     playListWindow = new QWidget();
     playListWindow->setWindowTitle("Playlist");
 
@@ -134,9 +146,9 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
     QPushButton *playBtn = new QPushButton(playListWindow);
     playBtn->setText("Play");
     playBtn->setGeometry(60, 310, 140, 30);
-    connect(addToPlayListBtn, SIGNAL(clicked()), this, SLOT(OnPlayBtnClick()));
+    connect(playBtn, SIGNAL(clicked()), this, SLOT(OnPlayBtnClick()));
 
-    playListWindow->show();
+    // END PLAYLIST WINDOW
 
 
     mainFrame->setLayout(frameLayout);
@@ -248,12 +260,12 @@ void GUIWindow::OnPauseButtonClick()
 
         if(pauseButton->checkState())
         {
-            worldMsg.set_pause(false);
+            worldMsg.set_pause(true);
             isSimulationPaused = false;
         }
         else
         {
-            worldMsg.set_pause(true);
+            worldMsg.set_pause(false);
             isSimulationPaused = true;
         }
 
@@ -264,12 +276,14 @@ void GUIWindow::OnPauseButtonClick()
         if(pauseButton->checkState())
         {
             server_args.append("-u");
+            isSimulationPaused = true;
         }
         else
         {
             if( int indx = server_args.indexOf("-u") > 0 )
             {
                 server_args[indx] = "";
+                isSimulationPaused = false;
             }
         }
     }
@@ -367,10 +381,6 @@ void GUIWindow::OnOpenWorldClick()
 /////////////////////////////////////////////////
 void GUIWindow::startServer()
 {
-    simTime   = 0;
-    pauseTime = 0;
-
-
     if(server_process != NULL)
         stopServer();
 
@@ -383,11 +393,11 @@ void GUIWindow::startServer()
         connect(server_process, SIGNAL(readyReadStandardError()),  this, SLOT(OnReadServerErrOutput()));
     }
 
-    pauseButton->setDisabled(false);
     loggingButton->setDisabled(false);
     openClientButton->setDisabled(false);
 
-    GUIComClient *clientThread = new GUIComClient(this);
+
+    clientThread = new GUIComClient(this);
     clientThread->start();
 
     openWorldButton->setText("Stop Server");
@@ -404,24 +414,40 @@ void GUIWindow::stopServer()
     serverCntrl.set_stop(true);
     this->serverCntPub->Publish(serverCntrl);
 
-    server_process->terminate();
-    server_process->waitForFinished(-1);
-    server_process->kill();
+    server_process->waitForFinished(WAIT_FOR_SERVER_SHUTDOWN_IN_MS);
+
+
+    if( UNSAFE_SERVER_SHUTDOWN )
+    {
+        server_process->terminate();
+        server_process->waitForFinished(WAIT_FOR_SERVER_SHUTDOWN_IN_MS);
+        server_process->kill();
+        // kill the server if it is not responding and proceed
+    }
+    else
+    {
+        server_process->terminate();
+        server_process->waitForFinished(-1);
+        // wait until the server is shut down
+    }
+
+
     delete server_process;
     server_process = NULL;
+
+   // clientThread->DoRun = false;
 
 
     for( std::list<QProcess*>::iterator processItr = child_processes.begin(); processItr != child_processes.end(); ++processItr)
     {
         (*processItr)->terminate();
+        (*processItr)->waitForFinished(WAIT_FOR_CLIENT_SHUTDOWN_IN_MS);
         (*processItr)->kill();
-        (*processItr)->waitForFinished(-1);
         delete (*processItr);
     }
     child_processes.clear();
 
 
-    pauseButton->setDisabled(true);
     loggingButton->setDisabled(true);
     openClientButton->setDisabled(true);
 
@@ -445,6 +471,21 @@ void GUIWindow::OnOpenClientClick()
 }
 
 
+
+
+/////////////////////////////////////////////////
+void GUIComClient::aliveMsgHandler(ConstWorldStatisticsPtr &p_msg)
+{
+    std::cerr << p_msg->DebugString();
+
+    if( p_msg->has_log_playback_stats()
+     && p_msg->sim_time().nsec()  >= p_msg->log_playback_stats().end_time().nsec() )
+    {
+        emit nextLog();
+    }
+}
+
+
 /////////////////////////////////////////////////
 void GUIComClient::run()
 {
@@ -456,13 +497,15 @@ void GUIComClient::run()
         std::cerr << "Client could not be started!";
     }
 
+    connect(this, SIGNAL(nextLog()), parent, SLOT(NextLogFile()));
+
     // Create a node for transportation
     parent->node = transport::NodePtr(new transport::Node());
     parent->node->Init();
     parent->worldCntPub  = parent->node->Advertise<msgs::WorldControl>("~/world_control");
     parent->serverCntPub = parent->node->Advertise<msgs::ServerControl>("/gazebo/server/control");
     parent->logCntPub    = parent->node->Advertise<msgs::LogControl>("~/log/control");
-    parent->aliveSubscrb = parent->node->Subscribe<gazebo::msgs::WorldStatistics, GUIWindow>("~/world_stats", &GUIWindow::aliveMsgHandler, parent);
+    parent->aliveSubscrb = parent->node->Subscribe<gazebo::msgs::WorldStatistics, GUIComClient>("~/world_stats", &GUIComClient::aliveMsgHandler, this);
 
     gazebo::msgs::LogControl logCntlr_path, logCntlr_encode;
     logCntlr_path.set_base_path(LOGS_FOLDER);
@@ -470,10 +513,14 @@ void GUIComClient::run()
     parent->logCntPub->Publish(logCntlr_path);
     parent->logCntPub->Publish(logCntlr_encode);
 
-    while (true)
+    DoRun = true;
+
+    while(DoRun)
       gazebo::common::Time::MSleep(10);
 
     gazebo::shutdown();
+
+    this->deleteLater();
 }
 
 
@@ -551,6 +598,20 @@ void GUIWindow::OnReadClientErrOutput()
 
 
 
+
+void GUIWindow::OnShowPlaylist()
+{
+    if( showPlaylist->isChecked() )
+    {
+        playListWindow->show();
+    }
+    else
+    {
+        playListWindow->hide();
+    }
+}
+
+
 /////////////////////////////////////////////////
 void GUIWindow::OnAddToPlayBtnClick()
 {
@@ -575,6 +636,15 @@ void GUIWindow::OnRemoveFromPlayBtnClick()
 void GUIWindow::OnPlayBtnClick()
 {
     playIndx = 0;
+
+    if( playlistWidget->count() > 0 )
+        playNextLog();
+}
+
+
+/////////////////////////////////////////////////
+void GUIWindow::NextLogFile()
+{
     playNextLog();
 }
 
@@ -584,8 +654,8 @@ void GUIWindow::playNextLog()
 {
     if( playlistWidget->count() > playIndx )
     {
+        std::cerr << " play: " << playIndx << std::endl ;
         removeWorldOrLogFromArgs();
-        playIndx++;
 
         playlistWidget->setCurrentRow(playIndx);
         QString file = playlistWidget->item(playIndx)->text();
@@ -596,22 +666,14 @@ void GUIWindow::playNextLog()
         server_args.push_back("-p");
         server_args.push_back(file);
         startServer();
+
+        playIndx++;
     }
-}
-
-
-/////////////////////////////////////////////////
-void GUIWindow::aliveMsgHandler(ConstWorldStatisticsPtr &p_msg)
-{
-    std::cout << p_msg->DebugString();
-
-    if( simTime   >= p_msg->sim_time().nsec()
-     && pauseTime >= p_msg->pause_time().nsec() )
+    else if( playlistWidget->count() > 0 )
     {
-        playNextLog();
-        return;
+        removeWorldOrLogFromArgs();
+        stopServer();
+        playIndx = 0;
+        std::cerr << " end";
     }
-
-    simTime   = p_msg->sim_time().nsec();
-    pauseTime = p_msg->pause_time().nsec();
 }
