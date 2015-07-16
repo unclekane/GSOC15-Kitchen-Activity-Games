@@ -124,7 +124,7 @@ int main(int _argc, char **_argv)
       gazebo::transport::SubscriberPtr serverSub = node->Subscribe("/gazebo/server/control", &OnServerMessage);
 
 
-      gazebo::util::LogRecord::Instance()->SetBasePath("logs");
+      gazebo::util::LogRecord::Instance()->SetBasePath("../logs");
       gazebo::util::LogRecord::Instance()->Init("server");
 
       server = new gazebo::Server();

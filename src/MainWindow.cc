@@ -501,7 +501,7 @@ void GUIWindow::OnOpenClientClick()
 /////////////////////////////////////////////////
 void GUIComClient::aliveMsgHandler(ConstWorldStatisticsPtr &p_msg)
 {
-    std::cerr << p_msg->DebugString();
+    //std::cerr << p_msg->DebugString();
 
     if( p_msg->has_log_playback_stats()
      && p_msg->sim_time().sec()  >= p_msg->log_playback_stats().end_time().sec() )
