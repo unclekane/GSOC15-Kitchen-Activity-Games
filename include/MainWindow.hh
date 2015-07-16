@@ -87,6 +87,7 @@ namespace gazebo
       private: void readProcessOutput(const char *p_process, const char *p_logLevel, QByteArray p_message);
       private: void aliveMsgHandler(ConstWorldStatisticsPtr &_msg);
       private: void playNextLog();
+      private: void addFileOrDirectoryToPlayList( QString &p_dir );
 
       protected slots: void OnPauseButtonClick();
       protected slots: void OnOpenWorldClick();

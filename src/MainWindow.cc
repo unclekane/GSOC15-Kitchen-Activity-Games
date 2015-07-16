@@ -640,13 +640,70 @@ void GUIWindow::OnShowPlaylist()
 /////////////////////////////////////////////////
 void GUIWindow::OnAddToPlayBtnClick()
 {
-    QString file = QFileDialog::getOpenFileName(this, tr("Open Log File"), LOGS_FOLDER);
+    QFileDialog openFileorFolder;
+    openFileorFolder.setFileMode(QFileDialog::Directory);
+    openFileorFolder.setOption(QFileDialog::DontUseNativeDialog,true);
+    QListView *l = openFileorFolder.findChild<QListView*>("listView");
 
-    if( file.isEmpty()
-     && !file.contains(".log") )
+    if(l)
+    {
+         l->setSelectionMode(QAbstractItemView::MultiSelection);
+    }
+
+    QTreeView *t = openFileorFolder.findChild<QTreeView*>();
+
+    if(t)
+    {
+       t->setSelectionMode(QAbstractItemView::MultiSelection);
+    }
+
+    int nMode = openFileorFolder.exec();
+    QStringList fileList = openFileorFolder.selectedFiles();
+
+
+    if( fileList.size() <= 0 )
         return;
 
-    playlistWidget->addItem(file);
+    for( int i = 0; i < fileList.size(); i++ )
+        addFileOrDirectoryToPlayList( fileList[i] );
+}
+
+
+void GUIWindow::addFileOrDirectoryToPlayList( QString &p_file )
+{
+    std::cerr << "IN: " << p_file.toStdString().c_str() << std::endl;
+
+    QFileInfo fileInfo = QFileInfo( p_file );
+
+    if( fileInfo.isDir() )
+    {
+        QDir dir( p_file );
+
+        if( dir.exists() )
+        {
+           QStringList filesAndDirectories = dir.entryList();
+
+           for( int i = 0; i < filesAndDirectories.size(); i++ )
+           {
+               if( filesAndDirectories[i].isEmpty()
+                || filesAndDirectories[i].compare(".")  == 0
+                || filesAndDirectories[i].compare("..") == 0 )
+                   continue;
+
+               QString filePath = fileInfo.absoluteFilePath();
+               filePath.append( QDir::separator() );
+               filePath.append( filesAndDirectories[i] );
+
+               std::cerr << "GO   :  " << filePath.toStdString().c_str() << std::endl;
+
+               addFileOrDirectoryToPlayList( filePath );
+           }
+        }
+    }
+    else if( fileInfo.suffix().contains("log") )
+    {
+        playlistWidget->addItem( p_file );
+    }
 }
 
 
