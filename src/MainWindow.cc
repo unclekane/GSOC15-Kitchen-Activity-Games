@@ -10,6 +10,7 @@
 #include <QFileDialog>
 #include <QCheckBox>
 #include <QListWidget>
+#include <QMessageBox>
 
 
 #include <sys/wait.h>
@@ -83,7 +84,7 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
     frameLayout->addWidget(pauseButton);
 
 
-    startClientAuto = new QCheckBox("Auto Client start");
+    startClientAuto = new QCheckBox( "Client auto start");
     startClientAuto->setChecked(true);
     startClientAuto->setStyleSheet("color:#ffffff;");
     frameLayout->addWidget(startClientAuto);
@@ -124,29 +125,50 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
 
     // PLAYLIST WINDOW
 
+    QHBoxLayout *playListWindowMainLayout  = new QHBoxLayout;
+    QFrame      *playListWindowMainFrame   = new QFrame();
+    QVBoxLayout *playListWindowFrameLayout = new QVBoxLayout();
+
     playListWindow = new QWidget();
     playListWindow->setWindowTitle("Playlist");
 
     playlistWidget = new PlayList(playListWindow);
     playlistWidget->setGeometry(0, 0, 200, 300);
+    playListWindowFrameLayout->addWidget( playlistWidget );
 
 
+    QGroupBox   *buttonsGroup        = new QGroupBox();
+    QHBoxLayout *buttonsGroupLayout  = new QHBoxLayout();
 
     QPushButton *addToPlayListBtn = new QPushButton(playListWindow);
     addToPlayListBtn->setText("+");
     addToPlayListBtn->setGeometry(0, 310, 20, 30);
     connect(addToPlayListBtn, SIGNAL(clicked()), this, SLOT(OnAddToPlayBtnClick()));
+    buttonsGroupLayout->addWidget( addToPlayListBtn );
+
 
     QPushButton *removeFromPlayListBtn = new QPushButton(playListWindow);
     removeFromPlayListBtn->setText("-");
     removeFromPlayListBtn->setGeometry(30, 310, 20, 30);
     connect(removeFromPlayListBtn, SIGNAL(clicked()), this, SLOT(OnRemoveFromPlayBtnClick()));
+    buttonsGroupLayout->addWidget( removeFromPlayListBtn );
 
 
     QPushButton *playBtn = new QPushButton(playListWindow);
     playBtn->setText("Play");
     playBtn->setGeometry(60, 310, 140, 30);
     connect(playBtn, SIGNAL(clicked()), this, SLOT(OnPlayBtnClick()));
+    buttonsGroupLayout->addWidget( playBtn );
+
+    buttonsGroup->setLayout(buttonsGroupLayout);
+    playListWindowFrameLayout->addWidget( buttonsGroup );
+
+
+    playListWindowMainFrame->setLayout(playListWindowFrameLayout);
+    playListWindowMainLayout->addWidget(playListWindowMainFrame);
+    playListWindowFrameLayout->setContentsMargins(0, 0, 0, 0);
+    playListWindowMainLayout->setContentsMargins(0, 0, 0, 0);
+    playListWindow->setLayout(playListWindowMainLayout);
 
     // END PLAYLIST WINDOW
 
@@ -410,6 +432,9 @@ void GUIWindow::startServer()
 
 void GUIWindow::stopServer()
 {
+    if( server_process == NULL )
+        return;
+
     gazebo::msgs::ServerControl serverCntrl;
     serverCntrl.set_stop(true);
     this->serverCntPub->Publish(serverCntrl);
@@ -479,7 +504,7 @@ void GUIComClient::aliveMsgHandler(ConstWorldStatisticsPtr &p_msg)
     std::cerr << p_msg->DebugString();
 
     if( p_msg->has_log_playback_stats()
-     && p_msg->sim_time().nsec()  >= p_msg->log_playback_stats().end_time().nsec() )
+     && p_msg->sim_time().sec()  >= p_msg->log_playback_stats().end_time().sec() )
     {
         emit nextLog();
     }
@@ -654,26 +679,34 @@ void GUIWindow::playNextLog()
 {
     if( playlistWidget->count() > playIndx )
     {
-        std::cerr << " play: " << playIndx << std::endl ;
+        if( server_process != NULL )
+            stopServer();
+
         removeWorldOrLogFromArgs();
 
         playlistWidget->setCurrentRow(playIndx);
         QString file = playlistWidget->item(playIndx)->text();
 
+        playIndx++;
+
         if(file.isEmpty())
             return;
 
+
         server_args.push_back("-p");
         server_args.push_back(file);
-        startServer();
 
-        playIndx++;
+        startServer();
     }
     else if( playlistWidget->count() > 0 )
     {
         removeWorldOrLogFromArgs();
         stopServer();
         playIndx = 0;
-        std::cerr << " end";
+        playlistWidget->setCurrentRow(playIndx);
+        QMessageBox::information(this, tr("Playlist"),
+                                       tr("The playlist finished!"),
+                                       QMessageBox::Ok );
+
     }
 }
