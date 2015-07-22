@@ -109,6 +109,7 @@ namespace gazebo
       protected slots: void OnAddToPlayBtnClick();
       protected slots: void OnRemoveFromPlayBtnClick();
       protected slots: void OnPlayBtnClick();
+      protected slots: void OnPlayBtnFolderClick();
 
       public slots: void NextLogFile();
     };

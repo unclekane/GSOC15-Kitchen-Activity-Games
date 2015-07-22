@@ -140,12 +140,17 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
     QGroupBox   *buttonsGroup        = new QGroupBox();
     QHBoxLayout *buttonsGroupLayout  = new QHBoxLayout();
 
+    QPushButton *addToPlayListFolderBtn = new QPushButton(playListWindow);
+    addToPlayListFolderBtn->setText("+ Folder");
+    addToPlayListFolderBtn->setGeometry(0, 310, 20, 30);
+    connect(addToPlayListFolderBtn, SIGNAL(clicked()), this, SLOT(OnPlayBtnFolderClick()));
+    buttonsGroupLayout->addWidget( addToPlayListFolderBtn );
+
     QPushButton *addToPlayListBtn = new QPushButton(playListWindow);
-    addToPlayListBtn->setText("+");
+    addToPlayListBtn->setText("+ File");
     addToPlayListBtn->setGeometry(0, 310, 20, 30);
     connect(addToPlayListBtn, SIGNAL(clicked()), this, SLOT(OnAddToPlayBtnClick()));
     buttonsGroupLayout->addWidget( addToPlayListBtn );
-
 
     QPushButton *removeFromPlayListBtn = new QPushButton(playListWindow);
     removeFromPlayListBtn->setText("-");
@@ -637,8 +642,24 @@ void GUIWindow::OnShowPlaylist()
 }
 
 
+
 /////////////////////////////////////////////////
 void GUIWindow::OnAddToPlayBtnClick()
+{
+    QString file = QFileDialog::getOpenFileName(this, tr("Open Log"), LOGS_FOLDER);
+
+    if(file.isEmpty())
+        return;
+
+    if( file.contains("log") )
+    {
+           playlistWidget->addItem( file );
+    }
+}
+
+
+/////////////////////////////////////////////////
+void GUIWindow::OnPlayBtnFolderClick()
 {
     QFileDialog openFileorFolder;
     openFileorFolder.setFileMode(QFileDialog::Directory);
