@@ -11,6 +11,7 @@
 #include <QCheckBox>
 #include <QListWidget>
 #include <QMessageBox>
+#include <QLineEdit>
 
 
 #include <sys/wait.h>
@@ -105,6 +106,22 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
     loadServerPlugin->setStyleSheet("color:#ffffff;");
     connect(loadServerPlugin, SIGNAL(clicked()), this, SLOT(OnLoadServerPluginClick()));
     frameLayout->addWidget(loadServerPlugin);
+
+
+    serverPluginsArgs = new QCheckBox("Add custom argument");
+    serverPluginsArgs->hide();
+    serverPluginsArgs->setStyleSheet("color:#ffffff;");
+    connect(serverPluginsArgs, SIGNAL(clicked()), this, SLOT(OnServerPluginsArgsClick()));
+    frameLayout->addWidget(serverPluginsArgs);
+
+    argText = new QLineEdit();
+    argText->hide();
+    frameLayout->addWidget(argText);
+
+    valueText = new QLineEdit();
+    valueText->hide();
+    frameLayout->addWidget(valueText);
+
 
     loadClientPlugin = new QCheckBox("Load Client Plugin");
     loadClientPlugin->setStyleSheet("color:#ffffff;");
@@ -230,6 +247,10 @@ void GUIWindow::OnLoadServerPluginClick()
 
         server_args.append("-s");
         server_args.append(file);
+
+        serverPluginsArgs->show();
+        argText->show();
+        valueText->show();
     }
     else
     {
@@ -242,7 +263,20 @@ void GUIWindow::OnLoadServerPluginClick()
                 break;
             }
         }
+
+
+        serverPluginsArgs->setChecked(false);
+        serverPluginsArgs->hide();
+        argText->hide();
+        valueText->hide();
     }
+}
+
+
+/////////////////////////////////////////////////
+void GUIWindow::OnServerPluginsArgsClick()
+{
+
 }
 
 
@@ -411,8 +445,20 @@ void GUIWindow::startServer()
     if(server_process != NULL)
         stopServer();
 
+    QStringList tmp_server_args = QStringList(server_args);
+
+
+    if( serverPluginsArgs->isChecked()
+     && !argText->text().isEmpty()
+     && !valueText->text().isEmpty() )
+    {
+        tmp_server_args.push_back( argText->text() );
+        tmp_server_args.push_back( QString::number( valueText->text().toInt() + playIndx ) );
+    }
+
+
     server_process = new QProcess(this);
-    server_process->start("./gzserver", server_args);
+    server_process->start("./gzserver", tmp_server_args);
 
     if( verboseOutput->isChecked() )
     {

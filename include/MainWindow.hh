@@ -12,6 +12,7 @@ class QPushButton;
 class QCheckBox;
 class QProcess;
 class QListWidget;
+class QLineEdit;
 
 
 namespace gazebo
@@ -63,9 +64,13 @@ namespace gazebo
       private: QCheckBox   *pauseButton;
       private: QCheckBox   *startClientAuto;
       private: QCheckBox   *loadServerPlugin;
+      private: QCheckBox   *serverPluginsArgs;
       private: QCheckBox   *loadClientPlugin;
       private: QCheckBox   *verboseOutput;
       private: QCheckBox   *showPlaylist;
+
+      private: QLineEdit   *argText;
+      private: QLineEdit   *valueText;
 
 
       private: QWidget     *playListWindow;
@@ -96,6 +101,7 @@ namespace gazebo
       protected slots: void OnOpenClientClick();
       protected slots: void OnLoadServerPluginClick();
       protected slots: void OnLoadClientPluginClick();
+      protected slots: void OnServerPluginsArgsClick();
 
       protected slots: void OnVerboseClick();
 
