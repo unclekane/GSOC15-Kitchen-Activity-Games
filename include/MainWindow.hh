@@ -36,14 +36,43 @@ namespace gazebo
     };
 
 
+    struct Argument
+    {
+        QString   Text;
+        QVariant  Value;
+
+        bool isIncremented;
+
+        Argument( QString p_text, QString p_value, bool p_increment )
+          : Text(p_text),
+            isIncremented(p_increment)
+        {
+            if( isIncremented )
+            {
+                Value = p_value.toInt();
+            }
+        }
+
+        void Increment()
+        {
+            if( isIncremented
+             && Value.type() == QVariant::Int )
+            {
+                Value = Value.toInt() + 1;
+            }
+        }
+
+    };
+
+
     class GAZEBO_VISIBLE GUIWindow : public QWidget
     {
       Q_OBJECT
 
       friend class GUIComClient;
 
-      private: int         argc;
-      private: char      **argv;
+      private: int     argc;
+      private: char  **argv;
 
       private: QStringList   server_args;
       private: QStringList   client_args;
@@ -64,13 +93,17 @@ namespace gazebo
       private: QCheckBox   *pauseButton;
       private: QCheckBox   *startClientAuto;
       private: QCheckBox   *loadServerPlugin;
-      private: QCheckBox   *serverPluginsArgs;
+      private: QCheckBox   *customArgs;
       private: QCheckBox   *loadClientPlugin;
       private: QCheckBox   *verboseOutput;
       private: QCheckBox   *showPlaylist;
 
+
+      private: QWidget     *argumentsWindow;
+      private: QListWidget *argumentsListView;
       private: QLineEdit   *argText;
       private: QLineEdit   *valueText;
+      private: QCheckBox   *incrementValue;
 
 
       private: QWidget     *playListWindow;
@@ -116,6 +149,10 @@ namespace gazebo
       protected slots: void OnRemoveFromPlayBtnClick();
       protected slots: void OnPlayBtnClick();
       protected slots: void OnPlayBtnFolderClick();
+
+
+      protected slots: void OnSaveArg();
+      protected slots: void OnRemoveArg();
 
       public slots: void NextLogFile();
     };

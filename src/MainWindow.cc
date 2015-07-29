@@ -54,6 +54,12 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
     QVBoxLayout *frameLayout = new QVBoxLayout();
 
 
+    customArgs = new QCheckBox("Custom arguments");
+    customArgs->setStyleSheet("color:#ffffff;");
+    connect(customArgs, SIGNAL(clicked()), this, SLOT(OnServerPluginsArgsClick()));
+    frameLayout->addWidget(customArgs);
+
+
     openWorldButton = new QPushButton("Start World", this);
     connect(openWorldButton, SIGNAL(clicked()), this, SLOT(OnOpenWorldClick()));
     frameLayout->addWidget(openWorldButton);
@@ -108,20 +114,6 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
     frameLayout->addWidget(loadServerPlugin);
 
 
-    serverPluginsArgs = new QCheckBox("Add custom argument");
-    serverPluginsArgs->hide();
-    serverPluginsArgs->setStyleSheet("color:#ffffff;");
-    connect(serverPluginsArgs, SIGNAL(clicked()), this, SLOT(OnServerPluginsArgsClick()));
-    frameLayout->addWidget(serverPluginsArgs);
-
-    argText = new QLineEdit();
-    argText->hide();
-    frameLayout->addWidget(argText);
-
-    valueText = new QLineEdit();
-    valueText->hide();
-    frameLayout->addWidget(valueText);
-
 
     loadClientPlugin = new QCheckBox("Load Client Plugin");
     loadClientPlugin->setStyleSheet("color:#ffffff;");
@@ -140,7 +132,26 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
     frameLayout->addWidget(verboseOutput);
 
 
+    mainFrame->setLayout(frameLayout);
+    mainLayout->addWidget(mainFrame);
+    frameLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+
+    this->setLayout(mainLayout);
+
+
+    isSimulationPaused = false;
+    isLoggingPaused    = true;
+
+    for (int i = 1; i < this->argc; ++i)
+    {
+        server_args.push_back(this->argv[i]);
+        client_args.push_back(this->argv[i]);
+    }
+
+
     // PLAYLIST WINDOW
+    {
 
     QHBoxLayout *playListWindowMainLayout  = new QHBoxLayout;
     QFrame      *playListWindowMainFrame   = new QFrame();
@@ -192,25 +203,64 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
     playListWindowMainLayout->setContentsMargins(0, 0, 0, 0);
     playListWindow->setLayout(playListWindowMainLayout);
 
+    }
     // END PLAYLIST WINDOW
 
 
-    mainFrame->setLayout(frameLayout);
-    mainLayout->addWidget(mainFrame);
-    frameLayout->setContentsMargins(0, 0, 0, 0);
-    mainLayout->setContentsMargins(0, 0, 0, 0);
-
-    this->setLayout(mainLayout);
-
-
-    isSimulationPaused = false;
-    isLoggingPaused    = true;
-
-    for (int i = 1; i < this->argc; ++i)
+    // ARGUMENT WINDOW
     {
-        server_args.push_back(this->argv[i]);
-        client_args.push_back(this->argv[i]);
+
+    QHBoxLayout *argsWindowMainLayout  = new QHBoxLayout;
+    QFrame      *argsWindowMainFrame   = new QFrame();
+    QVBoxLayout *argsWindowFrameLayout = new QVBoxLayout();
+
+
+    argumentsWindow = new QWidget();
+    argumentsWindow->setWindowTitle("Custom Arguments");
+
+    argumentsListView = new QListWidget(argumentsWindow);
+    argumentsListView->setGeometry(0, 0, 200, 300);
+    argsWindowFrameLayout->addWidget( argumentsListView );
+
+
+    QGroupBox   *inputGroup        = new QGroupBox();
+    QHBoxLayout *inputGroupLayout  = new QHBoxLayout();
+
+
+    argText = new QLineEdit();
+    inputGroupLayout->addWidget( argText );
+
+    valueText = new QLineEdit();
+    inputGroupLayout->addWidget( valueText );
+
+    incrementValue = new QCheckBox("++");
+    inputGroupLayout->addWidget( incrementValue );
+
+
+    QPushButton *saveBtn = new QPushButton();
+    saveBtn->setText("save");
+    saveBtn->setGeometry(0, 310, 20, 30);
+    connect(saveBtn, SIGNAL(clicked()), this, SLOT(OnSaveArg()));
+    inputGroupLayout->addWidget( saveBtn );
+
+    QPushButton *removeBtn = new QPushButton();
+    removeBtn->setText("delete");
+    removeBtn->setGeometry(0, 310, 20, 30);
+    connect(removeBtn, SIGNAL(clicked()), this, SLOT(OnRemoveArg()));
+    inputGroupLayout->addWidget( removeBtn );
+
+    inputGroup->setLayout(inputGroupLayout);
+    argsWindowFrameLayout->addWidget( inputGroup );
+
+
+
+    argsWindowMainFrame->setLayout(argsWindowFrameLayout);
+    argsWindowMainLayout->addWidget(argsWindowMainFrame);
+    argsWindowFrameLayout->setContentsMargins(0, 0, 0, 0);
+    argsWindowMainLayout->setContentsMargins(0, 0, 0, 0);
+    argumentsWindow->setLayout(argsWindowMainLayout);
     }
+    // END ARGUMENT WINDOW
 }
 
 
@@ -229,6 +279,9 @@ GUIWindow::~GUIWindow()
 
     playListWindow->close();
     delete playListWindow;
+
+    argumentsWindow->close();
+    delete argumentsWindow;
 }
 
 
@@ -247,10 +300,6 @@ void GUIWindow::OnLoadServerPluginClick()
 
         server_args.append("-s");
         server_args.append(file);
-
-        serverPluginsArgs->show();
-        argText->show();
-        valueText->show();
     }
     else
     {
@@ -263,12 +312,6 @@ void GUIWindow::OnLoadServerPluginClick()
                 break;
             }
         }
-
-
-        serverPluginsArgs->setChecked(false);
-        serverPluginsArgs->hide();
-        argText->hide();
-        valueText->hide();
     }
 }
 
@@ -276,7 +319,14 @@ void GUIWindow::OnLoadServerPluginClick()
 /////////////////////////////////////////////////
 void GUIWindow::OnServerPluginsArgsClick()
 {
-
+    if( customArgs->isChecked() )
+    {
+        argumentsWindow->show();
+    }
+    else
+    {
+        argumentsWindow->hide();
+    }
 }
 
 
@@ -447,13 +497,19 @@ void GUIWindow::startServer()
 
     QStringList tmp_server_args = QStringList(server_args);
 
-
-    if( serverPluginsArgs->isChecked()
-     && !argText->text().isEmpty()
-     && !valueText->text().isEmpty() )
+    if( argumentsListView->count() > 0 )
     {
-        tmp_server_args.push_back( argText->text() );
-        tmp_server_args.push_back( QString::number( valueText->text().toInt() + playIndx ) );
+        for( int i = 0; i < argumentsListView->count(); i++ )
+        {
+            Argument *arg = (Argument*) argumentsListView->item(i)->data(Qt::EditRole).value<void*>();
+
+            tmp_server_args.push_back( arg->Text );
+
+            if( arg->isIncremented )
+                tmp_server_args.push_back( QString::number( arg->Value.toInt() + playIndx ) );
+            else
+                tmp_server_args.push_back( arg->Value.toString() );
+        }
     }
 
 
@@ -833,4 +889,43 @@ void GUIWindow::playNextLog()
                                        QMessageBox::Ok );
 
     }
+}
+
+
+
+/////////////////////////////////////////////////
+void GUIWindow::OnSaveArg()
+{
+    if( argText->text().isEmpty() )
+        return;
+
+
+    Argument *argument = new Argument( argText->text(), valueText->text(), incrementValue->isChecked() );
+
+    QListWidgetItem *argItem;
+
+    if( argumentsListView->currentItem() == NULL )
+        argItem = new QListWidgetItem();
+    else
+        argItem = argumentsListView->currentItem();
+
+
+    argItem->setText( QString( argText->text() + " " + valueText->text() ) );
+    argItem->setData( Qt::UserRole, qVariantFromValue((void *) argument)   );
+
+
+    if( argumentsListView->currentItem() == NULL )
+        argumentsListView->insertItem( argumentsListView->selectedItems().count(), argItem );
+}
+
+
+
+/////////////////////////////////////////////////
+void GUIWindow::OnRemoveArg()
+{
+    argText->setText("");
+    valueText->setText("");
+    incrementValue->setChecked(false);
+
+    qDeleteAll( argumentsListView->selectedItems() );
 }
