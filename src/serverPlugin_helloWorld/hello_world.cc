@@ -12,6 +12,11 @@ namespace gazebo
     public: virtual void Load(int _argc = 0, char **_argv = NULL)
       {
            printf("Hello World!\n");
+
+           for (unsigned int i = 0; i < _argc; ++i){
+               printf( _argv[i] );
+               printf("\n");
+           }
       }
   };
 

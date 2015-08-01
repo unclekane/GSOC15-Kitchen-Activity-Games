@@ -37,7 +37,7 @@ using namespace gazebo;
 
 
 /////////////////////////////////////////////////
-GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
+GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget(), settings("GSOC", "KitchenActivityGame")
 {
     this->setAttribute(Qt::WA_DeleteOnClose);
 
@@ -220,6 +220,7 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
 
     argumentsListView = new QListWidget(argumentsWindow);
     argumentsListView->setGeometry(0, 0, 200, 300);
+    connect(argumentsListView, SIGNAL(itemClicked(QListWidgetItem *)), this, SLOT(OnArgClicked(QListWidgetItem *)));
     argsWindowFrameLayout->addWidget( argumentsListView );
 
 
@@ -235,6 +236,13 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
 
     incrementValue = new QCheckBox("++");
     inputGroupLayout->addWidget( incrementValue );
+
+
+    serverArg = new QCheckBox("server");
+    inputGroupLayout->addWidget( serverArg );
+
+    clientArg = new QCheckBox("client");
+    inputGroupLayout->addWidget( clientArg );
 
 
     QPushButton *saveBtn = new QPushButton();
@@ -259,6 +267,37 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget()
     argsWindowFrameLayout->setContentsMargins(0, 0, 0, 0);
     argsWindowMainLayout->setContentsMargins(0, 0, 0, 0);
     argumentsWindow->setLayout(argsWindowMainLayout);
+
+
+
+    QStringList settingsArgs = settings.childGroups();
+    for( int i = 0; i < settingsArgs.size(); i++ )
+    {
+         settings.beginGroup( settingsArgs.at(i) );
+         QString text  = settingsArgs.at(i);
+         bool    inc   = settings.value("incremented").toBool();
+         bool    srv   = settings.value("serverArg").toBool();
+         bool    cli   = settings.value("clientArg").toBool();
+
+         QString value;
+
+         if( settings.value("value").type() == QVariant::Int )
+            value = QString::number( settings.value("value").toInt() );
+         else
+            value = settings.value("value").toString();
+
+         Argument *argument = new Argument( text, value, inc, srv, cli );
+
+         QListWidgetItem *argItem = new QListWidgetItem();
+         argItem->setText( QString( text + " " + value ) );
+         argItem->setData( Qt::UserRole, qVariantFromValue((void *) argument)   );
+
+
+         settings.endGroup();
+
+         argumentsListView->insertItem( argumentsListView->selectedItems().count(), argItem );
+    }
+
     }
     // END ARGUMENT WINDOW
 }
@@ -279,6 +318,26 @@ GUIWindow::~GUIWindow()
 
     playListWindow->close();
     delete playListWindow;
+
+
+    settings.clear();
+    if( argumentsListView->count() > 0 )
+    {
+        for( int i = 0; i < argumentsListView->count(); i++ )
+        {
+            Argument *arg = (Argument*) argumentsListView->item(i)->data(Qt::UserRole).value<void*>();
+
+            settings.beginGroup(arg->Text);
+
+            settings.setValue("value",       arg->Value);
+            settings.setValue("incremented", arg->isIncremented);
+            settings.setValue("serverArg",   arg->isServerArg);
+            settings.setValue("clientArg",   arg->isClientArg);
+
+            settings.endGroup();
+        }
+    }
+
 
     argumentsWindow->close();
     delete argumentsWindow;
@@ -497,18 +556,22 @@ void GUIWindow::startServer()
 
     QStringList tmp_server_args = QStringList(server_args);
 
-    if( argumentsListView->count() > 0 )
+    if( customArgs->isChecked()
+     && argumentsListView->count() > 0 )
     {
         for( int i = 0; i < argumentsListView->count(); i++ )
         {
-            Argument *arg = (Argument*) argumentsListView->item(i)->data(Qt::EditRole).value<void*>();
+            Argument *arg = (Argument*) argumentsListView->item(i)->data(Qt::UserRole).value<void*>();
 
-            tmp_server_args.push_back( arg->Text );
+            if( arg->isServerArg )
+            {
+                tmp_server_args.push_back( arg->Text );
 
-            if( arg->isIncremented )
-                tmp_server_args.push_back( QString::number( arg->Value.toInt() + playIndx ) );
-            else
-                tmp_server_args.push_back( arg->Value.toString() );
+                if( arg->isIncremented )
+                    tmp_server_args.push_back( QString::number( arg->Value.toInt() + playIndx ) );
+                else
+                    tmp_server_args.push_back( arg->Value.toString() );
+            }
         }
     }
 
@@ -591,8 +654,29 @@ void GUIWindow::stopServer()
 /////////////////////////////////////////////////
 void GUIWindow::OnOpenClientClick()
 {
+    QStringList tmp_client_args = QStringList(client_args);
+
+    if( customArgs->isChecked()
+     && argumentsListView->count() > 0 )
+    {
+        for( int i = 0; i < argumentsListView->count(); i++ )
+        {
+            Argument *arg = (Argument*) argumentsListView->item(i)->data(Qt::UserRole).value<void*>();
+
+            if( arg->isClientArg )
+            {
+                tmp_client_args.push_back( arg->Text );
+
+                if( arg->isIncremented )
+                    tmp_client_args.push_back( QString::number( arg->Value.toInt() + playIndx ) );
+                else
+                    tmp_client_args.push_back( arg->Value.toString() );
+            }
+        }
+    }
+
     QProcess *client_process = new QProcess(this);
-    client_process->start("gzclient", client_args);
+    client_process->start("gzclient", tmp_client_args);
     child_processes.push_back(client_process);
 
     if( verboseOutput->isChecked() )
@@ -900,7 +984,7 @@ void GUIWindow::OnSaveArg()
         return;
 
 
-    Argument *argument = new Argument( argText->text(), valueText->text(), incrementValue->isChecked() );
+    Argument *argument = new Argument( argText->text(), valueText->text(), incrementValue->isChecked(), serverArg->isChecked(), clientArg->isChecked() );
 
     QListWidgetItem *argItem;
 
@@ -926,6 +1010,26 @@ void GUIWindow::OnRemoveArg()
     argText->setText("");
     valueText->setText("");
     incrementValue->setChecked(false);
+    serverArg->setChecked(false);
+    clientArg->setChecked(false);
 
     qDeleteAll( argumentsListView->selectedItems() );
+}
+
+
+/////////////////////////////////////////////////
+void GUIWindow::OnArgClicked(QListWidgetItem *p_itm)
+{
+    Argument *arg = (Argument*) p_itm->data(Qt::UserRole).value<void*>();
+
+    argText->setText(arg->Text);
+
+    if( arg->Value.type() == QVariant::Int)
+        valueText->setText( QString::number(arg->Value.toInt()) );
+    else
+        valueText->setText(arg->Value.toString());
+
+    incrementValue->setChecked(arg->isIncremented);
+    serverArg->setChecked(arg->isServerArg);
+    clientArg->setChecked(arg->isClientArg);
 }

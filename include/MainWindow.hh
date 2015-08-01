@@ -5,6 +5,7 @@
 #include <QWidget>
 #include <QThread>
 #include <QByteArray>
+#include <QSettings>
 #include "PlayList.hh"
 
 
@@ -42,26 +43,24 @@ namespace gazebo
         QVariant  Value;
 
         bool isIncremented;
+        bool isServerArg;
+        bool isClientArg;
 
-        Argument( QString p_text, QString p_value, bool p_increment )
+        Argument( QString p_text, QString p_value, bool p_increment, bool p_serverArg, bool p_clientArg )
           : Text(p_text),
-            isIncremented(p_increment)
+            isIncremented(p_increment),
+            isServerArg(p_serverArg),
+            isClientArg(p_clientArg)
         {
             if( isIncremented )
             {
                 Value = p_value.toInt();
             }
-        }
-
-        void Increment()
-        {
-            if( isIncremented
-             && Value.type() == QVariant::Int )
+            else
             {
-                Value = Value.toInt() + 1;
+                Value = p_value;
             }
         }
-
     };
 
 
@@ -70,6 +69,8 @@ namespace gazebo
       Q_OBJECT
 
       friend class GUIComClient;
+
+      private: QSettings settings;
 
       private: int     argc;
       private: char  **argv;
@@ -104,6 +105,8 @@ namespace gazebo
       private: QLineEdit   *argText;
       private: QLineEdit   *valueText;
       private: QCheckBox   *incrementValue;
+      private: QCheckBox   *serverArg;
+      private: QCheckBox   *clientArg;
 
 
       private: QWidget     *playListWindow;
@@ -153,6 +156,7 @@ namespace gazebo
 
       protected slots: void OnSaveArg();
       protected slots: void OnRemoveArg();
+      protected slots: void OnArgClicked(QListWidgetItem *);
 
       public slots: void NextLogFile();
     };
