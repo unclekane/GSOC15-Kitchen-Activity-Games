@@ -565,12 +565,19 @@ void GUIWindow::startServer()
 
             if( arg->isServerArg )
             {
+                std::cout << arg->Text.toStdString() << std::endl;
+
                 tmp_server_args.push_back( arg->Text );
 
-                if( arg->isIncremented )
-                    tmp_server_args.push_back( QString::number( arg->Value.toInt() + playIndx ) );
-                else
-                    tmp_server_args.push_back( arg->Value.toString() );
+                if( !arg->Value.isNull() )
+                {
+                    std::cout << "NOT NULL!";
+
+                    if( arg->isIncremented )
+                        tmp_server_args.push_back( QString::number( arg->Value.toInt() + playIndx ) );
+                    else
+                        tmp_server_args.push_back( arg->Value.toString() );
+                }
             }
         }
     }
@@ -667,10 +674,13 @@ void GUIWindow::OnOpenClientClick()
             {
                 tmp_client_args.push_back( arg->Text );
 
-                if( arg->isIncremented )
-                    tmp_client_args.push_back( QString::number( arg->Value.toInt() + playIndx ) );
-                else
-                    tmp_client_args.push_back( arg->Value.toString() );
+                if( !arg->Value.isNull() )
+                {
+                    if( arg->isIncremented )
+                        tmp_client_args.push_back( QString::number( arg->Value.toInt() + playIndx ) );
+                    else
+                        tmp_client_args.push_back( arg->Value.toString() );
+                }
             }
         }
     }
@@ -1000,6 +1010,9 @@ void GUIWindow::OnSaveArg()
 
     if( argumentsListView->currentItem() == NULL )
         argumentsListView->insertItem( argumentsListView->selectedItems().count(), argItem );
+
+    argumentsListView->setCurrentRow(-1);
+    OnRemoveArg();
 }
 
 
@@ -1024,10 +1037,13 @@ void GUIWindow::OnArgClicked(QListWidgetItem *p_itm)
 
     argText->setText(arg->Text);
 
-    if( arg->Value.type() == QVariant::Int)
-        valueText->setText( QString::number(arg->Value.toInt()) );
-    else
-        valueText->setText(arg->Value.toString());
+    if( !arg->Value.isNull() )
+    {
+        if( arg->Value.type() == QVariant::Int)
+            valueText->setText( QString::number(arg->Value.toInt()) );
+        else
+            valueText->setText(arg->Value.toString());
+    }
 
     incrementValue->setChecked(arg->isIncremented);
     serverArg->setChecked(arg->isServerArg);

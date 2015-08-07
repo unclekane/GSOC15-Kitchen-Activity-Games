@@ -52,13 +52,16 @@ namespace gazebo
             isServerArg(p_serverArg),
             isClientArg(p_clientArg)
         {
-            if( isIncremented )
+            if( !p_value.isEmpty() )
             {
-                Value = p_value.toInt();
-            }
-            else
-            {
-                Value = p_value;
+                if( isIncremented )
+                {
+                    Value = p_value.toInt();
+                }
+                else
+                {
+                    Value = p_value;
+                }
             }
         }
     };
