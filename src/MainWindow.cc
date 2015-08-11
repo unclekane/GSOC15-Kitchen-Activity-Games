@@ -127,6 +127,7 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget(), settings("GSOC", "K
     frameLayout->addWidget(line3);
 
     verboseOutput = new QCheckBox("Verbose");
+    verboseOutput->setChecked(true);
     verboseOutput->setStyleSheet("color:#ffffff;");
     connect(verboseOutput, SIGNAL(clicked()), this, SLOT(OnVerboseClick()));
     frameLayout->addWidget(verboseOutput);
@@ -300,6 +301,8 @@ GUIWindow::GUIWindow(int p_argc, char **p_argv) : QWidget(), settings("GSOC", "K
 
     }
     // END ARGUMENT WINDOW
+
+    OnVerboseClick();
 }
 
 
@@ -565,14 +568,10 @@ void GUIWindow::startServer()
 
             if( arg->isServerArg )
             {
-                std::cout << arg->Text.toStdString() << std::endl;
-
                 tmp_server_args.push_back( arg->Text );
 
                 if( !arg->Value.isNull() )
                 {
-                    std::cout << "NOT NULL!";
-
                     if( arg->isIncremented )
                         tmp_server_args.push_back( QString::number( arg->Value.toInt() + playIndx ) );
                     else
@@ -888,8 +887,6 @@ void GUIWindow::OnPlayBtnFolderClick()
 
 void GUIWindow::addFileOrDirectoryToPlayList( QString &p_file )
 {
-    std::cerr << "IN: " << p_file.toStdString().c_str() << std::endl;
-
     QFileInfo fileInfo = QFileInfo( p_file );
 
     if( fileInfo.isDir() )
@@ -910,8 +907,6 @@ void GUIWindow::addFileOrDirectoryToPlayList( QString &p_file )
                QString filePath = fileInfo.absoluteFilePath();
                filePath.append( QDir::separator() );
                filePath.append( filesAndDirectories[i] );
-
-               std::cerr << "GO   :  " << filePath.toStdString().c_str() << std::endl;
 
                addFileOrDirectoryToPlayList( filePath );
            }
