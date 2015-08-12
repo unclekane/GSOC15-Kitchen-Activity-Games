@@ -776,11 +776,11 @@ void GUIWindow::readProcessOutput( const char *p_process, const char *p_logLevel
     if( p_message.size() > 0 )
     {
         QString message;
-        message.append(p_process);
+     /*   message.append(p_process);
         message.append(" ");
         message.append(p_logLevel);
         message.append(" : ");
-
+     */
         message.append(p_message);
 
         std::cout << message.toStdString().c_str() << std::endl;
