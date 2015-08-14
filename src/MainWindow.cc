@@ -582,14 +582,20 @@ void GUIWindow::startServer()
     }
 
 
+
     server_process = new QProcess(this);
-    server_process->start("./gzserver", tmp_server_args);
 
     if( verboseOutput->isChecked() )
     {
-        connect(server_process, SIGNAL(readyReadStandardOutput()), this, SLOT(OnReadServerStdOutput()));
-        connect(server_process, SIGNAL(readyReadStandardError()),  this, SLOT(OnReadServerErrOutput()));
+        server_process->setProcessChannelMode(QProcess::ForwardedChannels);
     }
+/*
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert("GAZEBO_MODEL_PATH", env.value("GAZEBO_MODEL_PATH") + ":./models");
+    server_process->setProcessEnvironment(env);
+*/
+    server_process->start("./gzserver", tmp_server_args, QIODevice::Unbuffered);
+
 
     loggingButton->setDisabled(false);
     openClientButton->setDisabled(false);
@@ -685,14 +691,16 @@ void GUIWindow::OnOpenClientClick()
     }
 
     QProcess *client_process = new QProcess(this);
-    client_process->start("gzclient", tmp_client_args);
-    child_processes.push_back(client_process);
 
     if( verboseOutput->isChecked() )
     {
-        connect(client_process, SIGNAL(readyReadStandardOutput()), this, SLOT(OnReadClientStdOutput()));
-        connect(client_process, SIGNAL(readyReadStandardError()),  this, SLOT(OnReadClientErrOutput()));
+        client_process->setProcessChannelMode(QProcess::ForwardedChannels);
     }
+
+    client_process->start("gzclient", tmp_client_args);
+    child_processes.push_back(client_process);
+
+
 }
 
 
@@ -776,11 +784,11 @@ void GUIWindow::readProcessOutput( const char *p_process, const char *p_logLevel
     if( p_message.size() > 0 )
     {
         QString message;
-     /*   message.append(p_process);
+        message.append(p_process);
         message.append(" ");
         message.append(p_logLevel);
         message.append(" : ");
-     */
+
         message.append(p_message);
 
         std::cout << message.toStdString().c_str() << std::endl;

@@ -36,9 +36,16 @@ QT4_WRAP_CPP(headers_MOC include/MainWindow.hh
                          include/PlayList.hh )
 
 
+#find_package(ignition-math QUIET REQUIRED)
+#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${IGNITION-MATH_CXX_FLAGS}")
+#include_directories(${IGNITION-MATH_INCLUDE_DIRS})
+#link_directories(${IGNITION-MATH_LIBRARY_DIRS})
+
+
+
 add_executable(gzserver src/ServerMain src/ServerMain.cc)
 target_link_libraries(gzserver ${GAZEBO_LIBRARIES} gazebo_util ${Boost_LIBRARIES} ${PROTOBUF_LIBRARIES} ${QT_LIBRARIES} QtTest pthread)
 
 
 add_executable(KitchenActivityGamesGUI src/MinimalClientMain.cc src/MainWindow.cc src/PlayList.cc  ${headers_MOC} )
-target_link_libraries(KitchenActivityGamesGUI ${GAZEBO_LIBRARIES} gazebo_util ${Boost_LIBRARIES} ${OGRE_LIBRARIES} ${OGRE-Terrain_LIBRARIES} ${PROTOBUF_LIBRARIES} ${QT_LIBRARIES} QtTest pthread)
+target_link_libraries(KitchenActivityGamesGUI ${GAZEBO_LIBRARIES} gazebo_util ${Boost_LIBRARIES} ${OGRE_LIBRARIES} ${OGRE-Terrain_LIBRARIES} ${PROTOBUF_LIBRARIES} ${QT_LIBRARIES} ${IGNITION-MATH_LIBRARIES} QtTest pthread)
