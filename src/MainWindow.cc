@@ -697,10 +697,8 @@ void GUIWindow::OnOpenClientClick()
         client_process->setProcessChannelMode(QProcess::ForwardedChannels);
     }
 
-    client_process->start("gzclient", tmp_client_args);
+    client_process->start("gzclient", tmp_client_args, QIODevice::Unbuffered);
     child_processes.push_back(client_process);
-
-
 }
 
 
