@@ -29,6 +29,7 @@
 #define LOGS_FOLDER "../logs"
 #define PLUGINS_SERVER_FOLDER "../plugins/server"
 #define PLUGINS_CLIENT_FOLDER "../plugins/client"
+#define WAIT_BETWEEN_PLAYLIST_ENTRIES  0
 #define WAIT_FOR_SERVER_SHUTDOWN_IN_MS 1000
 #define WAIT_FOR_CLIENT_SHUTDOWN_IN_MS 5000
 #define UNSAFE_SERVER_SHUTDOWN false
@@ -956,6 +957,8 @@ void GUIWindow::playNextLog()
 {
     if( playlistWidget->count() > playIndx )
     {
+        usleep(WAIT_BETWEEN_PLAYLIST_ENTRIES);
+
         if( server_process != NULL )
             stopServer();
 
