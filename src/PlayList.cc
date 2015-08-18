@@ -5,6 +5,11 @@
 #include <QDropEvent>
 #include <QUrl>
 
+#include <QDir>
+#include <QFileInfo>
+
+#include <iostream>
+
 /////////////////////////////////////////////////
 PlayList::PlayList(QWidget *p_parent) : QListWidget(p_parent)
 {
@@ -44,20 +49,54 @@ void PlayList::dragMoveEvent(QDragMoveEvent *event)
     }
 }
 
+
+void PlayList::addFileOrDirectoryToPlayList( QString p_file )
+{
+    QFileInfo fileInfo = QFileInfo( p_file );
+
+    if( fileInfo.isDir() )
+    {
+        QDir dir( p_file );
+
+        if( dir.exists() )
+        {
+           QStringList filesAndDirectories = dir.entryList();
+
+           for( int i = 0; i < filesAndDirectories.size(); i++ )
+           {
+               if( filesAndDirectories[i].isEmpty()
+                || filesAndDirectories[i].compare(".")  == 0
+                || filesAndDirectories[i].compare("..") == 0 )
+                   continue;
+
+               QString filePath = fileInfo.absoluteFilePath();
+               filePath.append( QDir::separator() );
+               filePath.append( filesAndDirectories[i] );
+
+               addFileOrDirectoryToPlayList( filePath );
+           }
+        }
+    }
+    else if( fileInfo.suffix().contains("log") )
+    {
+        addItem( p_file );
+    }
+}
+
 /////////////////////////////////////////////////
 void PlayList::dropEvent(QDropEvent *event)
 {
     if (event->mimeData()->hasUrls())
     {
         QList<QUrl> urls = event->mimeData()->urls();
+
         if (!urls.isEmpty())
         {
             QUrl url;
 
             foreach (url,urls)
             {
-                if( url.toString().contains(".log") )
-                    new QListWidgetItem(url.toLocalFile(),this);
+                addFileOrDirectoryToPlayList( url.toString().remove("file://") );
             }
         }
 

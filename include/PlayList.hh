@@ -9,6 +9,8 @@ class PlayList : public QListWidget
 
     public: PlayList(QWidget *p_parent);
 
+    protected: void addFileOrDirectoryToPlayList( QString p_file );
+
     protected: void dragEnterEvent(QDragEnterEvent *event);
     protected: void dragMoveEvent(QDragMoveEvent *event);
     protected: void dropEvent(QDropEvent *event);
