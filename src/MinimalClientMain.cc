@@ -8,8 +8,10 @@ int g_argc = 1;
 char **g_argv;
 QApplication *g_app;
 
-
-////////////////////////////////////////////
+/**
+ * Main entrance of the application.
+ * It is creating the GUI, Main Loop via a QApplication and the connections for gazebo.
+ */
 int main(int _argc, char **_argv)
 {
   g_argv = new char*[g_argc];

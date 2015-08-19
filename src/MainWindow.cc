@@ -776,59 +776,6 @@ void GUIWindow::OnVerboseClick()
     }
 }
 
-/////////////////////////////////////////////////
-void GUIWindow::readProcessOutput( const char *p_process, const char *p_logLevel, QByteArray p_message )
-{
-    if( p_message.size() > 0 )
-    {
-        QString message;
-        message.append(p_process);
-        message.append(" ");
-        message.append(p_logLevel);
-        message.append(" : ");
-
-        message.append(p_message);
-
-        std::cout << message.toStdString().c_str() << std::endl;
-    }
-}
-
-
-/////////////////////////////////////////////////
-void GUIWindow::OnReadServerStdOutput()
-{
-    readProcessOutput( "Server", "vebose", server_process->readAllStandardOutput() );
-}
-
-
-/////////////////////////////////////////////////
-void GUIWindow::OnReadServerErrOutput()
-{
-    readProcessOutput( "Server", "error", server_process->readAllStandardError() );
-}
-
-
-/////////////////////////////////////////////////
-void GUIWindow::OnReadClientStdOutput()
-{
-    for( std::list<QProcess*>::iterator processItr = child_processes.begin(); processItr != child_processes.end(); ++processItr)
-    {
-        readProcessOutput( "Client", "verbose", (*processItr)->readAllStandardOutput() );
-    }
-}
-
-
-/////////////////////////////////////////////////
-void GUIWindow::OnReadClientErrOutput()
-{
-    for( std::list<QProcess*>::iterator processItr = child_processes.begin(); processItr != child_processes.end(); ++processItr)
-    {
-        readProcessOutput( "Client", "error", (*processItr)->readAllStandardError() );
-    }
-}
-
-
-
 
 void GUIWindow::OnShowPlaylist()
 {
